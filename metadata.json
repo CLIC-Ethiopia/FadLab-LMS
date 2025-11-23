@@ -1,0 +1,5 @@
+{
+  "name": "FadLab LMS",
+  "description": "A comprehensive e-learning platform for CLIC Ethiopia/FadLab featuring student dashboards, course management, and study planning with Google Sheets integration capability.",
+  "requestFramePermissions": []
+}
