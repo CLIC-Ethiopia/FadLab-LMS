@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -7,13 +8,14 @@ import StudyPlanner from './components/StudyPlanner';
 import CourseDetailsModal from './components/CourseDetailsModal';
 import AdminDashboard from './components/AdminDashboard';
 import ChatBot from './components/ChatBot';
+import SteamIE from './components/SteamIE';
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
-import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw, Lightbulb } from 'lucide-react';
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false, user: null });
-  const [currentView, setCurrentView] = useState<'dashboard' | 'courses' | 'settings' | 'admin'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'courses' | 'settings' | 'admin' | 'steam-ie'>('dashboard');
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [leaderboard, setLeaderboard] = useState<Student[]>([]);
@@ -259,6 +261,18 @@ const App: React.FC = () => {
               <span className="font-medium">All Courses</span>
             </button>
 
+            <button 
+              onClick={() => setCurrentView('steam-ie')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                currentView === 'steam-ie' 
+                  ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Lightbulb className="w-5 h-5" />
+              <span className="font-medium">STEAM-IE</span>
+            </button>
+
             {auth.user?.role === 'admin' && (
               <button 
                 onClick={() => setCurrentView('admin')}
@@ -364,6 +378,9 @@ const App: React.FC = () => {
                       onSelectCourse={handlePlanCourse}
                       onViewDetails={handleViewDetails}
                     />
+                  )}
+                  {currentView === 'steam-ie' && (
+                    <SteamIE />
                   )}
                   {currentView === 'admin' && auth.user?.role === 'admin' && (
                     <AdminDashboard 
