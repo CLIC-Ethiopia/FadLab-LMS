@@ -120,9 +120,19 @@ const App: React.FC = () => {
   const handleSavePlan = async (courseId: string, plan: { hoursPerWeek: number, targetDate: string }) => {
     if (!auth.user) return;
     await sheetService.enrollStudent(auth.user.id, courseId, plan);
-    // Refresh data
+    
+    // Refresh Data
+    // 1. Refresh Enrollments (Progress)
     const newEnrollments = await sheetService.getStudentEnrollments(auth.user.id);
     setEnrollments(newEnrollments);
+
+    // 2. Refresh User Profile (Study Plans) - This ensures Dashboard 'My Study Goals' updates immediately
+    const updatedUser = await sheetService.getStudentProfile(auth.user.email);
+    if (updatedUser) {
+        // We spread the user object to create a new reference, triggering React re-render
+        setAuth(prev => ({ ...prev, user: { ...updatedUser } }));
+    }
+
     setCurrentView('dashboard'); // Redirect to dashboard to show progress
   };
 

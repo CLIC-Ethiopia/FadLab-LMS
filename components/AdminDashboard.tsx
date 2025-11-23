@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { AdminStats, Course, CourseCategory } from '../types';
-import { Plus, Trash2, Users, BookOpen, GraduationCap, BarChart2, CheckCircle, Loader2, ArrowUpRight } from 'lucide-react';
+import { AdminStats, Course, CourseCategory, Resource } from '../types';
+import { Plus, Trash2, Users, BookOpen, GraduationCap, BarChart2, CheckCircle, Loader2, ArrowUpRight, Link as LinkIcon, Video, FileText, X } from 'lucide-react';
 
 interface AdminDashboardProps {
   stats: AdminStats | null;
@@ -23,10 +23,35 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, courses, onAddCo
     description: '',
     instructor: '',
     level: 'Beginner',
-    thumbnail: 'https://picsum.photos/400/225?grayscale'
+    thumbnail: 'https://picsum.photos/400/225?grayscale',
+    resources: []
+  });
+
+  // Temp state for adding a resource
+  const [tempResource, setTempResource] = useState<Resource>({
+    title: '',
+    url: '',
+    type: 'link'
   });
 
   const categories = Object.values(CourseCategory);
+
+  const handleAddResource = () => {
+    if (tempResource.title && tempResource.url) {
+      setNewCourse(prev => ({
+        ...prev,
+        resources: [...(prev.resources || []), tempResource]
+      }));
+      setTempResource({ title: '', url: '', type: 'link' });
+    }
+  };
+
+  const handleRemoveResource = (index: number) => {
+    setNewCourse(prev => ({
+      ...prev,
+      resources: prev.resources?.filter((_, i) => i !== index)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,8 +66,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, courses, onAddCo
         description: '',
         instructor: '',
         level: 'Beginner',
-        thumbnail: 'https://picsum.photos/400/225?grayscale'
+        thumbnail: 'https://picsum.photos/400/225?grayscale',
+        resources: []
       });
+      setTempResource({ title: '', url: '', type: 'link' });
     }
   };
 
@@ -173,6 +200,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, courses, onAddCo
                     />
                   </div>
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
                   <textarea 
@@ -182,7 +210,80 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ stats, courses, onAddCo
                     onChange={e => setNewCourse({...newCourse, description: e.target.value})}
                   />
                 </div>
-                <div className="flex justify-end pt-2">
+
+                {/* Supplementary Materials Section */}
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
+                  <label className="block text-sm font-bold text-slate-800 dark:text-white mb-2">Supplementary Materials (Optional)</label>
+                  
+                  {/* Added Resources List */}
+                  {newCourse.resources && newCourse.resources.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      {newCourse.resources.map((res, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-sm border border-slate-100 dark:border-slate-700">
+                           <div className="flex items-center gap-2">
+                             {res.type === 'video' ? <Video className="w-4 h-4 text-blue-500" /> : 
+                              res.type === 'document' ? <FileText className="w-4 h-4 text-orange-500" /> : 
+                              <LinkIcon className="w-4 h-4 text-green-500" />}
+                             <span className="font-medium text-slate-700 dark:text-slate-200">{res.title}</span>
+                             <span className="text-xs text-slate-400 border-l border-slate-200 dark:border-slate-700 pl-2 ml-2 truncate max-w-[150px]">{res.url}</span>
+                           </div>
+                           <button 
+                            type="button" 
+                            onClick={() => handleRemoveResource(idx)} 
+                            className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                           >
+                             <X className="w-4 h-4" />
+                           </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add New Resource Input */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                     <div className="md:col-span-4">
+                        <input 
+                          type="text" 
+                          placeholder="Title (e.g. Intro Video)"
+                          className="w-full px-3 py-1.5 text-sm rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                          value={tempResource.title}
+                          onChange={e => setTempResource({...tempResource, title: e.target.value})}
+                        />
+                     </div>
+                     <div className="md:col-span-5">
+                        <input 
+                          type="text" 
+                          placeholder="URL (https://...)"
+                          className="w-full px-3 py-1.5 text-sm rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                          value={tempResource.url}
+                          onChange={e => setTempResource({...tempResource, url: e.target.value})}
+                        />
+                     </div>
+                     <div className="md:col-span-2">
+                        <select
+                          className="w-full px-3 py-1.5 text-sm rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                          value={tempResource.type}
+                          onChange={e => setTempResource({...tempResource, type: e.target.value as any})}
+                        >
+                          <option value="link">Website</option>
+                          <option value="video">Video</option>
+                          <option value="document">PDF/Doc</option>
+                        </select>
+                     </div>
+                     <div className="md:col-span-1">
+                        <button 
+                          type="button" 
+                          onClick={handleAddResource}
+                          disabled={!tempResource.title || !tempResource.url}
+                          className="w-full h-full flex items-center justify-center bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                     </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button 
                     type="submit"
                     disabled={isLoading}
