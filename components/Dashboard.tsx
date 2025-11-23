@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Student, Enrollment, Course } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Trophy, Clock, BookOpen, TrendingUp } from 'lucide-react';
+import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar } from 'lucide-react';
 
 interface DashboardProps {
   student: Student;
@@ -146,6 +147,101 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Study Plan Goals Section */}
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+          <Target className="w-5 h-5 text-indigo-500" />
+          My Study Goals
+        </h3>
+        
+        {!student.studyPlans || student.studyPlans.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
+            <p>You haven't set any study goals yet.</p>
+            <p className="text-sm mt-1">Select a course and click "Plan Study" to set one up.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {student.studyPlans.map((plan, index) => {
+              const course = courses.find(c => c.id === plan.courseId);
+              const enrollment = enrollments.find(e => e.courseId === plan.courseId);
+              
+              if (!course) return null;
+              
+              const daysLeft = Math.ceil((new Date(plan.targetCompletionDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+              const isOverdue = daysLeft < 0;
+
+              return (
+                <div key={index} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-4 mb-4">
+                    <img 
+                      src={course.thumbnail} 
+                      alt={course.title} 
+                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 dark:text-white line-clamp-1 text-sm">{course.title}</h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider
+                            ${course.category === 'Science' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 
+                              'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}
+                         `}>
+                           {course.category}
+                         </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Clock className="w-4 h-4" />
+                        <span>Commitment</span>
+                      </div>
+                      <span className="font-medium text-slate-700 dark:text-slate-200">{plan.plannedHoursPerWeek} hrs/week</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Calendar className="w-4 h-4" />
+                        <span>Target Date</span>
+                      </div>
+                      <span className={`font-medium ${isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'}`}>
+                        {new Date(plan.targetCompletionDate).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs pt-1">
+                       <span className={`font-medium px-2 py-1 rounded ${
+                         daysLeft < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                         daysLeft <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                         'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                       }`}>
+                         {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
+                       </span>
+                    </div>
+                  </div>
+
+                  {enrollment && (
+                    <div className="mt-4">
+                      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <span>Progress</span>
+                        <span>{enrollment.progress}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                          style={{ width: `${enrollment.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

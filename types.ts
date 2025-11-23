@@ -70,3 +70,10 @@ export interface AuthState {
   isAuthenticated: boolean;
   user: Student | null;
 }
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  timestamp: Date;
+}

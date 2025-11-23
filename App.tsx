@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -7,6 +6,7 @@ import CourseList from './components/CourseList';
 import StudyPlanner from './components/StudyPlanner';
 import CourseDetailsModal from './components/CourseDetailsModal';
 import AdminDashboard from './components/AdminDashboard';
+import ChatBot from './components/ChatBot';
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
 import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw } from 'lucide-react';
@@ -303,7 +303,7 @@ const App: React.FC = () => {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+        <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200 relative">
           {/* Mobile Header */}
           <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -469,6 +469,14 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
+          
+          {/* AI ChatBot */}
+          <ChatBot 
+            courses={courses}
+            user={auth.user}
+            enrollments={enrollments}
+            leaderboard={leaderboard}
+          />
         </main>
 
         {detailsCourse && (
