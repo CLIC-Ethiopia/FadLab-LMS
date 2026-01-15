@@ -288,55 +288,90 @@ const MOCK_PROJECTS: Project[] = [
   }
 ];
 
-// --- LAB MANAGER MOCK DATA ---
+// --- LAB MANAGER MOCK DATA (Expanded Phase 4) ---
 
 const MOCK_LABS: Lab[] = [
   {
     id: 'l1',
     name: 'Fabrication Lab',
     type: 'Fabrication',
-    description: 'Equipped with heavy machinery for physical prototyping.',
+    description: 'The hardware heart of FadLab. Equipped with heavy machinery for physical prototyping, subtractive manufacturing, and electronics assembly.',
     icon: 'Hammer',
     capacity: 20,
-    location: 'Building A, Room 101'
+    location: 'Building A, Room 101',
+    consumables: [
+      { name: 'PLA Filament (White)', status: 'In Stock', unit: '15 Spools' },
+      { name: 'Plywood (3mm)', status: 'Low Stock', unit: '5 Sheets' },
+      { name: 'Solder Wire', status: 'In Stock', unit: '5 kg' },
+    ]
   },
   {
     id: 'l2',
     name: 'Digital Studio',
     type: 'Digital',
-    description: 'High-performance computing for VR, Rendering, and AI training.',
+    description: 'High-performance computing center for VR simulation, 3D rendering, AI model training, and professional media editing.',
     icon: 'Monitor',
     capacity: 15,
-    location: 'Building B, Room 204'
+    location: 'Building B, Room 204',
+    consumables: [
+      { name: 'VR Face Covers', status: 'In Stock', unit: '50 units' },
+      { name: 'Printer Paper (A3)', status: 'Out of Stock', unit: '0 Reams' },
+    ]
   },
   {
     id: 'l3',
     name: 'Agri-Tech Field Lab',
     type: 'Field',
-    description: 'Outdoor testing ground with sensor networks and drone zones.',
+    description: 'Outdoor testing ground featuring sensor networks, drone flight zones, and experimental hydroponic vertical farms.',
     icon: 'Sprout',
     capacity: 50,
-    location: 'Campus Gardens, Zone 3'
+    location: 'Campus Gardens, Zone 3',
+    consumables: [
+      { name: 'pH Buffer Solution', status: 'In Stock', unit: '10 Bottles' },
+      { name: 'Nutrient Mix A', status: 'Low Stock', unit: '2 Liters' },
+    ]
   },
   {
     id: 'l4',
     name: 'Business Incubator',
     type: 'Business',
-    description: 'Collaboration spaces for startups and meetings.',
+    description: 'Professional collaboration spaces for startups. Features conference rooms, pitching stages, and content creation tools.',
     icon: 'Briefcase',
     capacity: 30,
-    location: 'Building C, Room 301'
+    location: 'Building C, Room 301',
+    consumables: [
+      { name: 'Whiteboard Markers', status: 'In Stock', unit: '20 Pack' },
+      { name: 'Coffee Beans', status: 'In Stock', unit: '5 kg' },
+    ]
   }
 ];
 
+// Expanded Asset List
 const MOCK_ASSETS: Asset[] = [
-  { id: 'a1', labId: 'l1', name: 'Prusa MK3 - 01', model: '3D Printer', status: 'Available', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301' },
-  { id: 'a2', labId: 'l1', name: 'Prusa MK3 - 02', model: '3D Printer', status: 'In Use', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301' },
-  { id: 'a3', labId: 'l1', name: 'Laser Cutter Pro', model: 'Laser Cutter', status: 'Maintenance', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=302' },
-  { id: 'a4', labId: 'l2', name: 'Oculus Quest 2 - 01', model: 'VR Headset', status: 'Available', image: 'https://picsum.photos/200/200?random=303' },
-  { id: 'a5', labId: 'l2', name: 'RTX 4090 Workstation', model: 'Render Station', status: 'Available', certificationRequired: 'c7', image: 'https://picsum.photos/200/200?random=304' },
-  { id: 'a6', labId: 'l3', name: 'DJI Mavic 3M', model: 'Agri Drone', status: 'Available', certificationRequired: 'c2', image: 'https://picsum.photos/200/200?random=305' },
-  { id: 'a7', labId: 'l3', name: 'Soil Sensor Kit', model: 'IoT Kit', status: 'In Use', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=306' },
+  // --- FABRICATION LAB ---
+  { id: 'a1', labId: 'l1', name: 'Prusa MK3 - 01', model: '3D Printer', subCategory: 'Printers', status: 'Available', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301', specs: ['Build Vol: 25x21x21cm', 'Nozzle: 0.4mm'] },
+  { id: 'a2', labId: 'l1', name: 'Prusa MK3 - 02', model: '3D Printer', subCategory: 'Printers', status: 'In Use', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301', specs: ['Build Vol: 25x21x21cm', 'Nozzle: 0.6mm'] },
+  { id: 'a3', labId: 'l1', name: 'Epilog Laser Fusion', model: 'Laser Cutter', subCategory: 'CNC & Cutters', status: 'Maintenance', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=302', specs: ['60W CO2 Laser', 'Bed: 24x12 inch'] },
+  { id: 'a8', labId: 'l1', name: 'ShopBot Desktop', model: 'CNC Router', subCategory: 'CNC & Cutters', status: 'Available', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=310', specs: ['Spindle: 1HP', 'Cut Area: 24x18 inch'] },
+  { id: 'a9', labId: 'l1', name: 'Hakko Soldering Station 1', model: 'Electronics Bench', subCategory: 'Electronics', status: 'Available', image: 'https://picsum.photos/200/200?random=311', specs: ['Temp: 200-480°C', 'Includes Fume Extractor'] },
+  { id: 'a10', labId: 'l1', name: 'Roland Vinyl Cutter', model: 'Vinyl Cutter', subCategory: 'CNC & Cutters', status: 'Available', image: 'https://picsum.photos/200/200?random=312', specs: ['Width: 24 inch', 'Force: 350g'] },
+
+  // --- DIGITAL STUDIO ---
+  { id: 'a4', labId: 'l2', name: 'Oculus Quest 3 - Unit 1', model: 'VR Headset', subCategory: 'XR/VR', status: 'Available', image: 'https://picsum.photos/200/200?random=303', specs: ['128GB Storage', 'Includes Controllers'] },
+  { id: 'a5', labId: 'l2', name: 'Alienware Aurora R15', model: 'Sim Workstation', subCategory: 'Workstations', status: 'Available', certificationRequired: 'c7', image: 'https://picsum.photos/200/200?random=304', specs: ['RTX 4090', '64GB RAM', 'SolidWorks Installed'] },
+  { id: 'a11', labId: 'l2', name: 'Wacom Cintiq Pro', model: 'Drawing Tablet', subCategory: 'Peripherals', status: 'In Use', certificationRequired: 'c7', image: 'https://picsum.photos/200/200?random=313', specs: ['24 inch 4K Display', 'Pro Pen 2'] },
+  { id: 'a12', labId: 'l2', name: 'HTC Vive Pro Eye', model: 'VR Headset', subCategory: 'XR/VR', status: 'Available', image: 'https://picsum.photos/200/200?random=314', specs: ['Eye Tracking', 'Requires PC Tether'] },
+  
+  // --- AGRI-TECH FIELD LAB ---
+  { id: 'a6', labId: 'l3', name: 'DJI Mavic 3M', model: 'Multispectral Drone', subCategory: 'Drones', status: 'Available', certificationRequired: 'c2', image: 'https://picsum.photos/200/200?random=305', specs: ['RGB + Multispectral Cam', 'RTK Module'] },
+  { id: 'a7', labId: 'l3', name: 'Soil Sensor Kit A', model: 'IoT Kit', subCategory: 'Sensors', status: 'In Use', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=306', specs: ['NPK Sensor', 'Moisture/Temp/EC'] },
+  { id: 'a13', labId: 'l3', name: 'LoRaWAN Gateway', model: 'Network Node', subCategory: 'Connectivity', status: 'Available', image: 'https://picsum.photos/200/200?random=315', specs: ['Range: 10km', '8 Channels'] },
+  { id: 'a14', labId: 'l3', name: 'Dobot Magician', model: 'Robotic Arm', subCategory: 'Robotics', status: 'Available', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=316', specs: ['Payload: 500g', 'End Effectors: Gripper/Suction'] },
+  
+  // --- BUSINESS INCUBATOR ---
+  { id: 'a15', labId: 'l4', name: 'Sony A7III Kit', model: 'Camera Kit', subCategory: 'Media', status: 'Available', image: 'https://picsum.photos/200/200?random=317', specs: ['24-70mm Lens', '4K Video'] },
+  { id: 'a16', labId: 'l4', name: 'Rode Caster Pro', model: 'Podcast Station', subCategory: 'Media', status: 'Available', image: 'https://picsum.photos/200/200?random=318', specs: ['4 Mic Inputs', 'Bluetooth'] },
+  { id: 'a17', labId: 'l4', name: 'Epson 4K Projector', model: 'Presentation', subCategory: 'AV Equipment', status: 'In Use', image: 'https://picsum.photos/200/200?random=319', specs: ['3000 Lumens', 'HDMI/Wireless'] },
 ];
 
 const MOCK_DIGITAL_ASSETS: DigitalAsset[] = [
@@ -562,5 +597,13 @@ export const sheetService = {
     }
 
     return newBooking;
+  },
+
+  async reportAssetIssue(assetId: string): Promise<void> {
+    await delay(500);
+    const asset = MOCK_ASSETS.find(a => a.id === assetId);
+    if (asset) {
+      asset.status = 'Maintenance';
+    }
   }
 };

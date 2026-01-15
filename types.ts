@@ -115,6 +115,12 @@ export interface Project {
 
 export type LabType = 'Fabrication' | 'Digital' | 'Field' | 'Business';
 
+export interface Consumable {
+  name: string;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
+  unit: string; // e.g., "Spools", "Sheets"
+}
+
 export interface Lab {
   id: string;
   name: string;
@@ -123,6 +129,7 @@ export interface Lab {
   icon: string; // Lucide icon name or image url
   capacity: number;
   location: string;
+  consumables?: Consumable[]; // New: Track materials
 }
 
 export interface Asset {
@@ -130,6 +137,7 @@ export interface Asset {
   labId: string;
   name: string;
   model: string;
+  subCategory: string; // New: e.g., "Printer", "Sensor", "Software"
   status: 'Available' | 'In Use' | 'Maintenance';
   certificationRequired?: string; // Course ID required to use this
   image: string;

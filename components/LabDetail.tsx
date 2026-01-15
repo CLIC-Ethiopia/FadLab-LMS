@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Lab, Asset, DigitalAsset, Student, Enrollment, Course } from '../types';
+import { Lab, Asset, DigitalAsset, Student, Enrollment } from '../types';
 import { sheetService } from '../services/sheetService';
-import { ArrowLeft, Tool, Download, Lock, Calendar, CheckCircle, Search, FileCode, Box } from 'lucide-react';
+import { ArrowLeft, Download, Lock, Calendar, CheckCircle, Search, FileCode, Box, AlertTriangle, Layers, Wifi, Cpu, Camera, Settings } from 'lucide-react';
 import AssetBookingModal from './AssetBookingModal';
 
 interface LabDetailProps {
@@ -18,6 +18,9 @@ const LabDetail: React.FC<LabDetailProps> = ({ lab, user, enrollments, onBack })
   const [digitalAssets, setDigitalAssets] = useState<DigitalAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  
+  // Filtering
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,10 +38,30 @@ const LabDetail: React.FC<LabDetailProps> = ({ lab, user, enrollments, onBack })
 
   const checkCertification = (asset: Asset): boolean => {
     if (!asset.certificationRequired) return true;
-    // Check if user has enrolled in the required course
     const enrollment = enrollments.find(e => e.courseId === asset.certificationRequired);
-    // Simple logic: Must be enrolled (and ideally completed, but for demo just enrolled is fine or progress > 80)
     return enrollment ? enrollment.progress >= 80 : false;
+  };
+
+  const handleReportIssue = async (assetId: string) => {
+    if (confirm("Report this equipment as broken/malfunctioning? This will alert the lab manager.")) {
+      await sheetService.reportAssetIssue(assetId);
+      // Optimistic Update
+      setAssets(prev => prev.map(a => a.id === assetId ? { ...a, status: 'Maintenance' } : a));
+    }
+  };
+
+  const categories = ['All', ...new Set(assets.map(a => a.subCategory))];
+  
+  const filteredAssets = selectedCategory === 'All' 
+    ? assets 
+    : assets.filter(a => a.subCategory === selectedCategory);
+
+  const getSubCategoryIcon = (sub: string) => {
+    if (sub.includes('Sensors')) return <Wifi className="w-4 h-4" />;
+    if (sub.includes('Electronics') || sub.includes('Workstation')) return <Cpu className="w-4 h-4" />;
+    if (sub.includes('Media')) return <Camera className="w-4 h-4" />;
+    if (sub.includes('CNC')) return <Settings className="w-4 h-4" />;
+    return <Layers className="w-4 h-4" />;
   };
 
   return (
@@ -53,10 +76,10 @@ const LabDetail: React.FC<LabDetailProps> = ({ lab, user, enrollments, onBack })
 
       {/* Lab Header */}
       <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-         <div>
+         <div className="flex-1">
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">{lab.name}</h1>
             <p className="text-slate-500 dark:text-slate-400 max-w-xl">{lab.description}</p>
-            <div className="flex gap-4 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
+            <div className="flex flex-wrap gap-4 mt-4 text-sm font-medium text-slate-600 dark:text-slate-300">
                <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
                   📍 {lab.location}
                </span>
@@ -65,74 +88,141 @@ const LabDetail: React.FC<LabDetailProps> = ({ lab, user, enrollments, onBack })
                </span>
             </div>
          </div>
-         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-            <button 
-              onClick={() => setActiveTab('Physical')}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'Physical' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}
-            >
-              Physical Equipment
-            </button>
-            <button 
-              onClick={() => setActiveTab('Digital')}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'Digital' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}
-            >
-              Digital Repository
-            </button>
-         </div>
+         
+         {/* Consumable Tracker Widget */}
+         {lab.consumables && lab.consumables.length > 0 && (
+           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 w-full md:w-64">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Material Stock</h4>
+              <div className="space-y-2">
+                {lab.consumables.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-sm">
+                    <span className="text-slate-700 dark:text-slate-300 truncate mr-2">{item.name}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap
+                      ${item.status === 'In Stock' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        item.status === 'Low Stock' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                      {item.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+           </div>
+         )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
+        <button 
+          onClick={() => setActiveTab('Physical')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'Physical' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}
+        >
+          Physical Equipment
+        </button>
+        <button 
+          onClick={() => setActiveTab('Digital')}
+          className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'Digital' ? 'bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'}`}
+        >
+          Digital Repository
+        </button>
       </div>
 
       {/* Content Area */}
       <div className="min-h-[400px]">
          {activeTab === 'Physical' ? (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {assets.map(asset => {
-               const isCertified = checkCertification(asset);
-               return (
-                 <div key={asset.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all group">
-                    <div className="h-48 bg-slate-100 dark:bg-slate-800 relative">
-                       <img src={asset.image} alt={asset.name} className="w-full h-full object-cover" />
-                       <div className={`absolute top-3 right-3 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider shadow-sm
-                          ${asset.status === 'Available' ? 'bg-green-100 text-green-700 dark:bg-green-900/80 dark:text-green-300' : 
-                            asset.status === 'Maintenance' ? 'bg-red-100 text-red-700 dark:bg-red-900/80 dark:text-red-300' :
-                            'bg-orange-100 text-orange-700 dark:bg-orange-900/80 dark:text-orange-300'
-                          }`}>
-                          {asset.status}
-                       </div>
-                    </div>
-                    <div className="p-5">
-                       <div className="flex justify-between items-start mb-2">
-                          <div>
-                             <h3 className="font-bold text-slate-800 dark:text-white">{asset.name}</h3>
-                             <p className="text-sm text-slate-500 dark:text-slate-400">{asset.model}</p>
-                          </div>
-                       </div>
-                       
-                       <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                          {isCertified ? (
-                             <button 
-                               disabled={asset.status !== 'Available'}
-                               onClick={() => setSelectedAsset(asset)}
-                               className="w-full py-2 bg-slate-900 dark:bg-blue-600 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                             >
-                               <Calendar className="w-4 h-4" />
-                               {asset.status === 'Available' ? 'Book Now' : 'Unavailable'}
-                             </button>
-                          ) : (
-                             <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg flex items-start gap-3">
-                                <Lock className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                                <div>
-                                   <p className="text-xs font-bold text-orange-700 dark:text-orange-300">Certification Required</p>
-                                   <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-                                      Complete the safety course to unlock this equipment.
-                                   </p>
-                                </div>
-                             </div>
-                          )}
-                       </div>
-                    </div>
-                 </div>
-               );
-             })}
+           <div className="space-y-6">
+             {/* Filter Bar */}
+             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+               {categories.map(cat => (
+                 <button
+                   key={cat}
+                   onClick={() => setSelectedCategory(cat)}
+                   className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border
+                     ${selectedCategory === cat 
+                       ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
+                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'
+                     }`}
+                 >
+                   {getSubCategoryIcon(cat)}
+                   {cat}
+                 </button>
+               ))}
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {filteredAssets.map(asset => {
+                 const isCertified = checkCertification(asset);
+                 return (
+                   <div key={asset.id} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden hover:shadow-lg transition-all group flex flex-col">
+                      <div className="h-48 bg-slate-100 dark:bg-slate-800 relative">
+                         <img src={asset.image} alt={asset.name} className="w-full h-full object-cover" />
+                         <div className={`absolute top-3 right-3 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider shadow-sm
+                            ${asset.status === 'Available' ? 'bg-green-100 text-green-700 dark:bg-green-900/80 dark:text-green-300' : 
+                              asset.status === 'Maintenance' ? 'bg-red-100 text-red-700 dark:bg-red-900/80 dark:text-red-300' :
+                              'bg-orange-100 text-orange-700 dark:bg-orange-900/80 dark:text-orange-300'
+                            }`}>
+                            {asset.status}
+                         </div>
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col">
+                         <div className="flex justify-between items-start mb-2">
+                            <div>
+                               <h3 className="font-bold text-slate-800 dark:text-white">{asset.name}</h3>
+                               <p className="text-sm text-slate-500 dark:text-slate-400">{asset.model}</p>
+                            </div>
+                            <button 
+                              onClick={() => handleReportIssue(asset.id)}
+                              className="text-slate-300 hover:text-red-500 transition-colors"
+                              title="Report Issue"
+                            >
+                              <AlertTriangle className="w-4 h-4" />
+                            </button>
+                         </div>
+                         
+                         {/* Specs List */}
+                         {asset.specs && (
+                           <ul className="my-3 space-y-1">
+                             {asset.specs.map((spec, i) => (
+                               <li key={i} className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                                 <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                                 {spec}
+                               </li>
+                             ))}
+                           </ul>
+                         )}
+
+                         <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                            {isCertified ? (
+                               <button 
+                                 disabled={asset.status !== 'Available'}
+                                 onClick={() => setSelectedAsset(asset)}
+                                 className="w-full py-2 bg-slate-900 dark:bg-blue-600 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                               >
+                                 <Calendar className="w-4 h-4" />
+                                 {asset.status === 'Available' ? 'Book Now' : 'Unavailable'}
+                               </button>
+                            ) : (
+                               <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg flex items-start gap-3">
+                                  <Lock className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                     <p className="text-xs font-bold text-orange-700 dark:text-orange-300">Certification Required</p>
+                                     <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                        Complete safety course to unlock.
+                                     </p>
+                                  </div>
+                               </div>
+                            )}
+                         </div>
+                      </div>
+                   </div>
+                 );
+               })}
+             </div>
+             {filteredAssets.length === 0 && (
+                <div className="text-center py-12 text-slate-400">
+                   No equipment found in this category.
+                </div>
+             )}
            </div>
          ) : (
            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-6">
