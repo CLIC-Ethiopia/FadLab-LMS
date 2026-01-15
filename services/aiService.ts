@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Course, Student, Enrollment } from '../types';
 
 // Initialize the Gemini Client
+// Ensure API_KEY is set in your environment variables (e.g., Netlify Dashboard)
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const aiService = {
@@ -50,18 +51,6 @@ export const aiService = {
     `;
 
     try {
-      // We map the chat history to the format expected by the SDK if needed, 
-      // but for a simple stateless request with heavy context, we often just 
-      // append history to the prompt or use the chat session. 
-      // Here we use a fresh generateContent call with history as context to ensure full data freshness.
-      
-      /* 
-       * Note: For a true multi-turn chat with history maintenance, we would use ai.chats.create().
-       * However, to inject the *latest* App Data (courses/progress) into the system instruction 
-       * on every turn without complex session management, we will treat this as a single turn 
-       * request including previous messages for continuity.
-       */
-
       let conversationLog = "";
       // Take last 6 messages to save tokens but keep context
       chatHistory.slice(-6).forEach(msg => {
@@ -70,7 +59,7 @@ export const aiService = {
       conversationLog += `Student: ${message}\nProf. Fad:`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: conversationLog,
         config: {
           systemInstruction: systemInstruction,
@@ -81,6 +70,7 @@ export const aiService = {
       return response.text || "I'm sorry, I encountered an error accessing my academic records. Please try again.";
 
     } catch (error) {
+      // Log the specific error for debugging
       console.error("Gemini API Error:", error);
       return "My connection to the FadLab servers is a bit unstable right now. Please try asking again in a moment.";
     }
