@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import CourseList from './components/CourseList';
 import StudyPlanner from './components/StudyPlanner';
 import CourseDetailsModal from './components/CourseDetailsModal';
+import CourseProgressModal from './components/CourseProgressModal';
 import AdminDashboard from './components/AdminDashboard';
 import ChatBot from './components/ChatBot';
 import SteamIE from './components/SteamIE';
@@ -28,6 +29,7 @@ const App: React.FC = () => {
   // Modal States
   const [plannerCourse, setPlannerCourse] = useState<Course | null>(null);
   const [detailsCourse, setDetailsCourse] = useState<Course | null>(null);
+  const [progressCourse, setProgressCourse] = useState<Course | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
@@ -116,6 +118,10 @@ const App: React.FC = () => {
 
   const handleViewDetails = (course: Course) => {
     setDetailsCourse(course);
+  };
+  
+  const handleResumeLearning = (course: Course) => {
+    setProgressCourse(course);
   };
 
   const handleEnrollFromDetails = (course: Course) => {
@@ -411,6 +417,7 @@ const App: React.FC = () => {
                       courses={courses}
                       leaderboard={leaderboard}
                       onViewDetails={handleViewDetails}
+                      onResumeLearning={handleResumeLearning}
                     />
                   )}
                   {currentView === 'courses' && (
@@ -569,6 +576,21 @@ const App: React.FC = () => {
             course={plannerCourse} 
             onClose={() => setPlannerCourse(null)} 
             onSave={handleSavePlan} 
+          />
+        )}
+        
+        {progressCourse && (
+          <CourseProgressModal 
+             course={progressCourse}
+             enrollment={enrollments.find(e => e.courseId === progressCourse.id) || {
+                studentId: auth.user?.id || '',
+                courseId: progressCourse.id,
+                progress: 0,
+                plannedHoursPerWeek: 0,
+                startDate: '',
+                targetCompletionDate: ''
+             }}
+             onClose={() => setProgressCourse(null)}
           />
         )}
       </div>

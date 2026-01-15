@@ -11,9 +11,10 @@ interface DashboardProps {
   courses: Course[];
   leaderboard: Student[];
   onViewDetails: (course: Course) => void;
+  onResumeLearning?: (course: Course) => void; // Added handler
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails }) => {
+const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning }) => {
   
   // Calculate stats
   const totalProgress = enrollments.reduce((acc, curr) => acc + curr.progress, 0);
@@ -178,9 +179,11 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                 <div 
                   key={index} 
                   className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
-                  onClick={() => onViewDetails(course)}
                 >
-                  <div className="flex items-start gap-4 mb-4">
+                  <div 
+                    onClick={() => onViewDetails(course)}
+                    className="flex items-start gap-4 mb-4"
+                  >
                     <img 
                       src={course.thumbnail} 
                       alt={course.title} 
@@ -199,7 +202,7 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow">
+                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow" onClick={() => onViewDetails(course)}>
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <Clock className="w-4 h-4" />
@@ -244,13 +247,19 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                     </div>
                   )}
 
-                  {/* Quick Action Footer */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
+                  {/* Quick Action Footer - Always Visible */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs font-medium">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onViewDetails(course); }}
+                      className="flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
                       <BookOpen className="w-3 h-3" />
                       View Details
                     </button>
-                    <button className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline transition-all">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); if(onResumeLearning) onResumeLearning(course); }}
+                      className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    >
                       <PlayCircle className="w-3 h-3" />
                       Resume Learning
                     </button>
