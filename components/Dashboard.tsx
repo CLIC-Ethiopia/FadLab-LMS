@@ -1,17 +1,19 @@
 
+
 import React from 'react';
 import { Student, Enrollment, Course } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar } from 'lucide-react';
+import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle } from 'lucide-react';
 
 interface DashboardProps {
   student: Student;
   enrollments: Enrollment[];
   courses: Course[];
   leaderboard: Student[];
+  onViewDetails: (course: Course) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard }) => {
+const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails }) => {
   
   // Calculate stats
   const totalProgress = enrollments.reduce((acc, curr) => acc + curr.progress, 0);
@@ -173,15 +175,19 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
               const isOverdue = daysLeft < 0;
 
               return (
-                <div key={index} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-md transition-shadow">
+                <div 
+                  key={index} 
+                  className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
+                  onClick={() => onViewDetails(course)}
+                >
                   <div className="flex items-start gap-4 mb-4">
                     <img 
                       src={course.thumbnail} 
                       alt={course.title} 
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-90 transition-opacity"
                     />
                     <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-white line-clamp-1 text-sm">{course.title}</h4>
+                      <h4 className="font-semibold text-slate-800 dark:text-white line-clamp-1 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{course.title}</h4>
                       <div className="flex items-center gap-1.5 mt-1">
                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider
                             ${course.category === 'Science' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 
@@ -193,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow">
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <Clock className="w-4 h-4" />
@@ -224,8 +230,8 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                   </div>
 
                   {enrollment && (
-                    <div className="mt-4">
-                      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                    <div className="mt-4 space-y-2">
+                      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
                         <span>Progress</span>
                         <span>{enrollment.progress}%</span>
                       </div>
@@ -237,6 +243,18 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                       </div>
                     </div>
                   )}
+
+                  {/* Quick Action Footer */}
+                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
+                      <BookOpen className="w-3 h-3" />
+                      View Details
+                    </button>
+                    <button className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline transition-all">
+                      <PlayCircle className="w-3 h-3" />
+                      Resume Learning
+                    </button>
+                  </div>
                 </div>
               );
             })}

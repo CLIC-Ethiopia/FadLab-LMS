@@ -410,6 +410,7 @@ const App: React.FC = () => {
                       enrollments={enrollments} 
                       courses={courses}
                       leaderboard={leaderboard}
+                      onViewDetails={handleViewDetails}
                     />
                   )}
                   {currentView === 'courses' && (
