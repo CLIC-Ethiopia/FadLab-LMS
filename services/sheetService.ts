@@ -22,7 +22,7 @@ let MOCK_COURSES: Course[] = [
     thumbnail: 'https://picsum.photos/400/225?random=1',
     level: 'Beginner',
     resources: [
-      { title: 'STEAM Education Framework PDF', url: '#', type: 'document' },
+      { title: 'STEAM Education Framework PDF', url: '/docs/steam_framework.pdf', type: 'document' },
       { title: 'Introductory Lecture Video', url: '#', type: 'video' },
       { title: 'Official CLIC Africa Website', url: 'https://clicafrica.org', type: 'link' }
     ]
@@ -37,7 +37,7 @@ let MOCK_COURSES: Course[] = [
     thumbnail: 'https://picsum.photos/400/225?random=2',
     level: 'Intermediate',
     resources: [
-      { title: 'Hydroponic Systems Diagram', url: '#', type: 'document' },
+      { title: 'Hydroponic Systems Diagram', url: '/images/hydro_diagram.png', type: 'document' },
       { title: 'Nutrient Solution Guide', url: '#', type: 'link' }
     ]
   },
@@ -52,7 +52,7 @@ let MOCK_COURSES: Course[] = [
     level: 'Advanced',
     resources: [
       { title: 'Arduino for Industry 4.0', url: '#', type: 'video' },
-      { title: 'Sensor Integration Manual', url: '#', type: 'document' }
+      { title: 'Sensor Integration Manual', url: '/docs/sensor_manual.pdf', type: 'document' }
     ]
   },
   {
@@ -65,7 +65,7 @@ let MOCK_COURSES: Course[] = [
     thumbnail: 'https://picsum.photos/400/225?random=4',
     level: 'Beginner',
     resources: [
-      { title: 'Business Model Canvas Template', url: '#', type: 'document' },
+      { title: 'Business Model Canvas Template', url: '/google_drive/Templates/BMC_v2.pdf', type: 'document' },
       { title: 'Pitch Deck Examples', url: '#', type: 'link' }
     ]
   },
@@ -375,10 +375,10 @@ const MOCK_ASSETS: Asset[] = [
 ];
 
 const MOCK_DIGITAL_ASSETS: DigitalAsset[] = [
-  { id: 'da1', labId: 'l1', title: 'Gear Assembly STL', type: 'Model', description: 'Standard gear set for robotics projects.', url: '#', authorName: 'System', downloads: 120, size: '45 MB' },
-  { id: 'da2', labId: 'l1', title: 'Laser Cut Box Template', type: 'Template', description: 'Finger-joint box generator files.', url: '#', authorName: 'Prof. Frehun', downloads: 85, size: '2 MB' },
-  { id: 'da3', labId: 'l2', title: 'Unity VR Starter Kit', type: 'Code', description: 'Boilerplate for VR interactions.', url: '#', authorName: 'System', downloads: 200, size: '150 MB' },
-  { id: 'da4', labId: 'l4', title: 'Startup Financial Model', type: 'Template', description: 'Excel sheet for calculating runway and burn rate.', url: '#', authorName: 'Lecturer Mulunesh', downloads: 340, size: '1 MB' },
+  { id: 'da1', labId: 'l1', title: 'Gear Assembly STL', type: 'Model', description: 'Standard gear set for robotics projects.', url: '/models/gear_assembly.stl', authorName: 'System', downloads: 120, size: '45 MB' },
+  { id: 'da2', labId: 'l1', title: 'Laser Cut Box Template', type: 'Template', description: 'Finger-joint box generator files.', url: '/models/box_template.dxf', authorName: 'Prof. Frehun', downloads: 85, size: '2 MB' },
+  { id: 'da3', labId: 'l2', title: 'Unity VR Starter Kit', type: 'Code', description: 'Boilerplate for VR interactions.', url: '/google_drive/VR/StarterKit.zip', authorName: 'System', downloads: 200, size: '150 MB' },
+  { id: 'da4', labId: 'l4', title: 'Startup Financial Model', type: 'Template', description: 'Excel sheet for calculating runway and burn rate.', url: '/google_drive/Finance/startup_model_v1.xlsx', authorName: 'Lecturer Mulunesh', downloads: 340, size: '1 MB' },
 ];
 
 let MOCK_BOOKINGS: Booking[] = [
