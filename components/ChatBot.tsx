@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Loader2, User, Bot } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, User, Bot, Sparkles } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { Course, Student, Enrollment, ChatMessage } from '../types';
 
@@ -25,6 +26,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const suggestedPrompts = [
+    "What is STEAM-IE?",
+    "Recommend a course",
+    "How is my progress?",
+    "How do I submit a project?",
+    "Tell me about CLIC Ethiopia"
+  ];
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -35,13 +44,14 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
     }
   }, [messages, isOpen]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (textOverride?: string) => {
+    const messageText = textOverride || input;
+    if (!messageText.trim()) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      text: input,
+      text: messageText,
       timestamp: new Date()
     };
 
@@ -125,7 +135,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-950 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -165,8 +175,26 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Suggested Prompts */}
+          {!isLoading && (
+            <div className="px-4 pt-2 bg-white dark:bg-slate-900 border-t border-slate-50 dark:border-slate-800/50">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mask-linear-fade">
+                {suggestedPrompts.map((prompt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSend(prompt)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium rounded-full border border-slate-200 dark:border-slate-700 transition-colors whitespace-nowrap snap-start"
+                  >
+                    <Sparkles className="w-3 h-3 text-indigo-400" />
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Input Area */}
-          <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-4 pt-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
             <div className="relative">
               <input
                 type="text"
@@ -178,7 +206,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
                 className="w-full pl-4 pr-12 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl border-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
               />
               <button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim() || isLoading}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >

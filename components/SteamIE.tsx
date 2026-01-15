@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Lightbulb, Cpu, PenTool, Calculator, Rocket, Briefcase, Globe, ExternalLink, Quote, BrainCircuit } from 'lucide-react';
 
 const SteamIE: React.FC = () => {
-  const [activeLetter, setActiveLetter] = useState<string>('S');
+  const [activeWord, setActiveWord] = useState<string>('Science');
 
   const acronyms = [
     {
@@ -64,7 +64,7 @@ const SteamIE: React.FC = () => {
     }
   ];
 
-  const activeItem = acronyms.find(a => a.letter === activeLetter) || acronyms[0];
+  const activeItem = acronyms.find(a => a.word === activeWord) || acronyms[0];
 
   return (
     <div className="space-y-12 animate-fade-in pb-12">
@@ -94,10 +94,10 @@ const SteamIE: React.FC = () => {
         <div className="lg:col-span-5 flex flex-col gap-3">
           {acronyms.map((item) => (
             <button
-              key={item.letter}
-              onClick={() => setActiveLetter(item.letter)}
+              key={item.word}
+              onClick={() => setActiveWord(item.word)}
               className={`group flex items-center gap-4 p-4 rounded-xl transition-all duration-300 border text-left
-                ${activeLetter === item.letter 
+                ${activeWord === item.word 
                   ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md scale-105' 
                   : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
@@ -106,7 +106,7 @@ const SteamIE: React.FC = () => {
                 {item.icon}
               </div>
               <div>
-                <span className={`block font-bold text-lg ${activeLetter === item.letter ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                <span className={`block font-bold text-lg ${activeWord === item.word ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                   {item.word}
                 </span>
               </div>
@@ -119,7 +119,7 @@ const SteamIE: React.FC = () => {
           <div className="h-full bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-lg flex flex-col justify-center relative overflow-hidden">
             <div className={`absolute top-0 right-0 w-32 h-32 ${activeItem.color} opacity-10 rounded-bl-full transition-colors duration-500`}></div>
             
-            <div className="relative z-10 animate-fade-in" key={activeLetter}>
+            <div className="relative z-10 animate-fade-in" key={activeWord}>
               <span className={`text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-slate-800 to-slate-400 dark:from-white dark:to-slate-600 mb-4 block`}>
                 {activeItem.letter}
               </span>

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -9,13 +10,16 @@ import CourseDetailsModal from './components/CourseDetailsModal';
 import AdminDashboard from './components/AdminDashboard';
 import ChatBot from './components/ChatBot';
 import SteamIE from './components/SteamIE';
+import SocialHub from './components/SocialHub';
+import InnoLab from './components/InnoLab';
+import LabManager from './components/LabManager';
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
-import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw, Lightbulb } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw, Lightbulb, Users, FlaskConical, Wrench } from 'lucide-react';
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false, user: null });
-  const [currentView, setCurrentView] = useState<'dashboard' | 'courses' | 'settings' | 'admin' | 'steam-ie'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'courses' | 'settings' | 'admin' | 'steam-ie' | 'social' | 'inno-lab' | 'lab-manager'>('dashboard');
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [leaderboard, setLeaderboard] = useState<Student[]>([]);
@@ -262,6 +266,42 @@ const App: React.FC = () => {
             </button>
 
             <button 
+              onClick={() => setCurrentView('inno-lab')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                currentView === 'inno-lab' 
+                  ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <FlaskConical className="w-5 h-5" />
+              <span className="font-medium">Inno-Lab</span>
+            </button>
+
+            <button 
+              onClick={() => setCurrentView('lab-manager')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                currentView === 'lab-manager' 
+                  ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Wrench className="w-5 h-5" />
+              <span className="font-medium">Lab Resources</span>
+            </button>
+
+            <button 
+              onClick={() => setCurrentView('social')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                currentView === 'social' 
+                  ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="font-medium">Social Hub</span>
+            </button>
+
+            <button 
               onClick={() => setCurrentView('steam-ie')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                 currentView === 'steam-ie' 
@@ -378,6 +418,15 @@ const App: React.FC = () => {
                       onSelectCourse={handlePlanCourse}
                       onViewDetails={handleViewDetails}
                     />
+                  )}
+                  {currentView === 'social' && (
+                    <SocialHub />
+                  )}
+                  {currentView === 'inno-lab' && auth.user && (
+                    <InnoLab user={auth.user} />
+                  )}
+                  {currentView === 'lab-manager' && auth.user && (
+                    <LabManager user={auth.user} enrollments={enrollments} />
                   )}
                   {currentView === 'steam-ie' && (
                     <SteamIE />

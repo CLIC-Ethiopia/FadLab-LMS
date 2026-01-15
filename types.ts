@@ -1,4 +1,5 @@
 
+
 export enum CourseCategory {
   Science = 'Science',
   Technology = 'Technology',
@@ -41,6 +42,7 @@ export interface Student {
   role: 'student' | 'admin'; // Added role
   enrolledCourses: string[]; // Array of Course IDs
   studyPlans?: StudyPlan[];
+  projectIds?: string[]; // Added: Array of Project IDs authored by student
   points: number;
   rank: number;
 }
@@ -76,4 +78,82 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: Date;
+}
+
+export interface SocialPost {
+  id: string;
+  source: 'CLIC Ethiopia' | 'FadLab';
+  sourceUrl: string; // URL to the FB page
+  authorAvatar: string;
+  content: string;
+  image?: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  timestamp: string;
+  tags: string[];
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  category: CourseCategory;
+  tags: string[];
+  thumbnail: string;
+  authorId: string;
+  authorName: string;
+  authorAvatar: string;
+  likes: number;
+  status: 'Idea' | 'Prototype' | 'Launched';
+  githubUrl?: string;
+  demoUrl?: string;
+  timestamp: string;
+}
+
+// --- LAB MANAGER TYPES ---
+
+export type LabType = 'Fabrication' | 'Digital' | 'Field' | 'Business';
+
+export interface Lab {
+  id: string;
+  name: string;
+  type: LabType;
+  description: string;
+  icon: string; // Lucide icon name or image url
+  capacity: number;
+  location: string;
+}
+
+export interface Asset {
+  id: string;
+  labId: string;
+  name: string;
+  model: string;
+  status: 'Available' | 'In Use' | 'Maintenance';
+  certificationRequired?: string; // Course ID required to use this
+  image: string;
+  specs?: string[];
+}
+
+export interface Booking {
+  id: string;
+  assetId: string;
+  studentId: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:00
+  durationHours: number;
+  purpose: string;
+}
+
+export interface DigitalAsset {
+  id: string;
+  labId: string;
+  title: string;
+  type: 'Model' | 'Code' | 'Texture' | 'Template' | 'Dataset';
+  description: string;
+  url: string;
+  authorName: string;
+  downloads: number;
+  size: string;
 }
