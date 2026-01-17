@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Course, CourseCategory } from '../types';
-import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen } from 'lucide-react';
+import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen, Layers, List, GraduationCap } from 'lucide-react';
 
 interface CourseDetailsModalProps {
   course: Course;
@@ -9,6 +10,26 @@ interface CourseDetailsModalProps {
 }
 
 const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose, onEnroll }) => {
+  
+  // Dynamic content generation to ensure sections are populated
+  const learningPoints = [
+    `Comprehensive understanding of ${course.title} fundamentals`,
+    `Hands-on experience with ${course.category} tools and workflows`,
+    `Real-world problem solving methodologies used in industry`,
+    `Project-based learning culminating in a portfolio piece`
+  ];
+
+  const prerequisites = course.level === 'Beginner' 
+    ? ["No prior experience required", "Basic computer literacy", "A curiosity for STEAM subjects"]
+    : ["Completion of introductory modules", "Familiarity with basic terminology", "Access to a computer with internet"];
+
+  // Ensure resources array exists, or provide defaults so the section is always visible
+  const displayResources = course.resources && course.resources.length > 0 ? course.resources : [
+    { title: "Course Syllabus", url: "#", type: "document" },
+    { title: "Glossary of Terms", url: "#", type: "document" },
+    { title: "Community Forum", url: "#", type: "link" }
+  ];
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-in">
@@ -64,9 +85,13 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
+            {/* About */}
             <div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">About this Course</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-slate-500" />
+                About this Course
+              </h3>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                 {course.description}
               </p>
@@ -76,57 +101,116 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
               </p>
             </div>
             
-            <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <h4 className="font-semibold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-blue-500" />
+            {/* What you'll learn (Enhanced) */}
+            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                <h4 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-blue-500" />
                   What you'll learn
                 </h4>
-                <ul className="space-y-3">
-                    <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300 text-sm">
-                        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span>Core concepts and advanced methodologies in {course.category}</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300 text-sm">
-                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span>Practical application using industry-standard tools and workflows</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300 text-sm">
-                         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span>Problem-solving strategies for real-world scenarios</span>
-                    </li>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {learningPoints.map((point, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-slate-600 dark:text-slate-300 text-sm">
+                          <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span>{point}</span>
+                      </li>
+                    ))}
                 </ul>
             </div>
 
-            {course.resources && course.resources.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-purple-500" />
-                  Supplementary Materials
-                </h3>
-                <div className="grid gap-3">
-                  {course.resources.map((resource, idx) => (
-                    <a 
-                      key={idx}
-                      href={resource.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
-                    >
-                      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
-                        {resource.type === 'video' ? <Video className="w-5 h-5" /> : 
-                         resource.type === 'document' ? <FileText className="w-5 h-5" /> : 
-                         <LinkIcon className="w-5 h-5" />}
-                      </div>
-                      <div className="flex-1">
-                         <h4 className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{resource.title}</h4>
-                         <p className="text-xs text-slate-500 capitalize">{resource.type}</p>
-                      </div>
-                      <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
-                    </a>
-                  ))}
-                </div>
+            {/* NEW SECTION: Course Curriculum / Structure */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                 <Layers className="w-5 h-5 text-indigo-500" />
+                 Course Curriculum
+              </h3>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">1</span>
+                       <span className="font-medium text-slate-700 dark:text-slate-200">Introduction & Foundations</span>
+                    </div>
+                    <span className="text-xs text-slate-400">1h 30m</span>
+                 </div>
+                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">2</span>
+                       <span className="font-medium text-slate-700 dark:text-slate-200">Core Concepts & Theory</span>
+                    </div>
+                    <span className="text-xs text-slate-400">2h 15m</span>
+                 </div>
+                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">3</span>
+                       <span className="font-medium text-slate-700 dark:text-slate-200">Applied Lab & Practical</span>
+                    </div>
+                    <span className="text-xs text-slate-400">3h 00m</span>
+                 </div>
+                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">4</span>
+                       <span className="font-medium text-slate-700 dark:text-slate-200">Final Assessment</span>
+                    </div>
+                    <span className="text-xs text-slate-400">45m</span>
+                 </div>
               </div>
-            )}
+            </div>
+
+            {/* NEW SECTION: Prerequisites */}
+            <div>
+               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                 <List className="w-5 h-5 text-orange-500" />
+                 Prerequisites
+               </h3>
+               <ul className="list-disc list-inside space-y-2 text-slate-600 dark:text-slate-300 text-sm pl-2">
+                  {prerequisites.map((req, i) => (
+                    <li key={i}>{req}</li>
+                  ))}
+               </ul>
+            </div>
+
+            {/* Supplementary Materials (Always show, use defaults if missing) */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-purple-500" />
+                Supplementary Materials
+              </h3>
+              <div className="grid gap-3">
+                {displayResources.map((resource: any, idx: number) => (
+                  <a 
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                  >
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors">
+                      {resource.type === 'video' ? <Video className="w-5 h-5" /> : 
+                       resource.type === 'document' ? <FileText className="w-5 h-5" /> : 
+                       <LinkIcon className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1">
+                       <h4 className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{resource.title}</h4>
+                       <p className="text-xs text-slate-500 capitalize">{resource.type}</p>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* NEW SECTION: Certification Info */}
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border border-orange-100 dark:border-orange-900/30">
+               <div className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm">
+                  <GraduationCap className="w-6 h-6 text-orange-500" />
+               </div>
+               <div>
+                  <h4 className="font-bold text-slate-800 dark:text-white">Earn a Certificate</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                    Complete all modules and the final project to receive a verified certificate from FadLab & CLIC Ethiopia, which can be shared on your professional profile.
+                  </p>
+               </div>
+            </div>
+
           </div>
         </div>
 
