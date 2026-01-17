@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -30,11 +32,6 @@ const App: React.FC = () => {
   const [progressCourse, setProgressCourse] = useState<Course | null>(null);
   
   const [loading, setLoading] = useState(false);
-  
-  // Login State
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
-
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
 
   // Theme State
@@ -79,58 +76,40 @@ const App: React.FC = () => {
 
       const results = await Promise.all(promises);
       
-      // Safety checks: ensure we are setting arrays, not undefined, to prevent crashes in child components
-      setCourses(Array.isArray(results[0]) ? results[0] : []);
-      setEnrollments(Array.isArray(results[1]) ? results[1] : []);
-      setLeaderboard(Array.isArray(results[2]) ? results[2] : []);
+      setCourses(results[0]);
+      setEnrollments(results[1]);
+      setLeaderboard(results[2]);
       
       if (user.role === 'admin' && results[3]) {
         setAdminStats(results[3]);
       }
 
     } catch (error) {
-      console.error("Failed to fetch data from sheets", error);
+      console.error("Failed to fetch data from mock sheets", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogin = async (email?: string) => {
-    setIsLoggingIn(true);
-    setLoginError(null);
-    try {
-      // Use provided email or default demo student email
-      const targetEmail = email || 'abebe@fadlab.tech';
-      
-      const student = await sheetService.getStudentProfile(targetEmail);
-      
-      if (student) {
-        setAuth({ isAuthenticated: true, user: student });
-        // Redirect admin to admin dashboard initially, else standard dashboard
-        if (student.role === 'admin') {
-          setCurrentView('admin');
-        } else {
-          setCurrentView('dashboard');
-        }
-        // Start background fetch for dashboard data
-        fetchData(student);
+    // Simulate login for demo purposes
+    const targetEmail = email || 'abebe@fadlab.tech';
+    const student = await sheetService.getStudentProfile(targetEmail);
+    if (student) {
+      setAuth({ isAuthenticated: true, user: student });
+      // Redirect admin to admin dashboard initially, else standard dashboard
+      if (student.role === 'admin') {
+        setCurrentView('admin');
       } else {
-        setLoginError("Account not found. Please check your email or contact support.");
+        setCurrentView('dashboard');
       }
-    } catch (error: any) {
-      console.error("Login Error:", error);
-      setLoginError(error.message || "Failed to connect to FadLab servers. Please try again.");
-    } finally {
-      setIsLoggingIn(false);
+      fetchData(student);
     }
   };
 
   const handleLogout = () => {
     setAuth({ isAuthenticated: false, user: null });
     setCurrentView('dashboard');
-    setCourses([]);
-    setEnrollments([]);
-    setLeaderboard([]);
   };
 
   const handlePlanCourse = (course: Course) => {
@@ -157,7 +136,7 @@ const App: React.FC = () => {
     // Refresh Data
     // 1. Refresh Enrollments (Progress)
     const newEnrollments = await sheetService.getStudentEnrollments(auth.user.id);
-    setEnrollments(Array.isArray(newEnrollments) ? newEnrollments : []);
+    setEnrollments(newEnrollments);
 
     // 2. Refresh User Profile (Study Plans) - This ensures Dashboard 'My Study Goals' updates immediately
     const updatedUser = await sheetService.getStudentProfile(auth.user.email);
@@ -213,7 +192,7 @@ const App: React.FC = () => {
       // Refresh data
       const updatedCourses = await sheetService.getCourses();
       const updatedStats = await sheetService.getAdminStats();
-      setCourses(Array.isArray(updatedCourses) ? updatedCourses : []);
+      setCourses(updatedCourses);
       setAdminStats(updatedStats);
     } catch (e) {
       console.error(e);
@@ -230,7 +209,7 @@ const App: React.FC = () => {
       // Refresh data
       const updatedCourses = await sheetService.getCourses();
       const updatedStats = await sheetService.getAdminStats();
-      setCourses(Array.isArray(updatedCourses) ? updatedCourses : []);
+      setCourses(updatedCourses);
       setAdminStats(updatedStats);
     } catch (e) {
       console.error(e);
@@ -240,7 +219,7 @@ const App: React.FC = () => {
   };
 
   if (!auth.isAuthenticated) {
-    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={loginError} />;
+    return <Login onLogin={handleLogin} />;
   }
 
   const presetAvatars = [
