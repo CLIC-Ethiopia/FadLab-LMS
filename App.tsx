@@ -79,9 +79,10 @@ const App: React.FC = () => {
 
       const results = await Promise.all(promises);
       
-      setCourses(results[0]);
-      setEnrollments(results[1]);
-      setLeaderboard(results[2]);
+      // Safety checks: ensure we are setting arrays, not undefined, to prevent crashes in child components
+      setCourses(Array.isArray(results[0]) ? results[0] : []);
+      setEnrollments(Array.isArray(results[1]) ? results[1] : []);
+      setLeaderboard(Array.isArray(results[2]) ? results[2] : []);
       
       if (user.role === 'admin' && results[3]) {
         setAdminStats(results[3]);
@@ -156,7 +157,7 @@ const App: React.FC = () => {
     // Refresh Data
     // 1. Refresh Enrollments (Progress)
     const newEnrollments = await sheetService.getStudentEnrollments(auth.user.id);
-    setEnrollments(newEnrollments);
+    setEnrollments(Array.isArray(newEnrollments) ? newEnrollments : []);
 
     // 2. Refresh User Profile (Study Plans) - This ensures Dashboard 'My Study Goals' updates immediately
     const updatedUser = await sheetService.getStudentProfile(auth.user.email);
@@ -212,7 +213,7 @@ const App: React.FC = () => {
       // Refresh data
       const updatedCourses = await sheetService.getCourses();
       const updatedStats = await sheetService.getAdminStats();
-      setCourses(updatedCourses);
+      setCourses(Array.isArray(updatedCourses) ? updatedCourses : []);
       setAdminStats(updatedStats);
     } catch (e) {
       console.error(e);
@@ -229,7 +230,7 @@ const App: React.FC = () => {
       // Refresh data
       const updatedCourses = await sheetService.getCourses();
       const updatedStats = await sheetService.getAdminStats();
-      setCourses(updatedCourses);
+      setCourses(Array.isArray(updatedCourses) ? updatedCourses : []);
       setAdminStats(updatedStats);
     } catch (e) {
       console.error(e);
