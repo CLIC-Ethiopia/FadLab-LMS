@@ -1,7 +1,8 @@
 import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Project, Lab, Asset, Booking, DigitalAsset } from '../types';
 
-// Access directly so Vite can statically replace this value
-const API_URL = import.meta.env.VITE_GOOGLE_SHEET_URL;
+// Use the environment variable if available, otherwise fallback to the hardcoded URL
+// This ensures it works on Netlify even if the environment variable isn't set in the dashboard
+const API_URL = import.meta.env.VITE_GOOGLE_SHEET_URL || "https://script.google.com/macros/s/AKfycbwSroyQSFa-orqeF2TbkaxmfSs8mzC4edJ-ma4u6JQpt9PrT2ZoA_vUPIL4n-CCUYySDg/exec";
 
 /**
  * Generic API Caller for Google Apps Script
@@ -10,7 +11,7 @@ const API_URL = import.meta.env.VITE_GOOGLE_SHEET_URL;
  */
 const apiCall = async (action: string, method: 'GET' | 'POST' = 'GET', payload?: any) => {
   if (!API_URL) {
-    console.error("Google Sheet API URL is missing in .env");
+    console.error("Google Sheet API URL is missing configuration.");
     throw new Error("API Configuration Missing");
   }
 
@@ -57,7 +58,7 @@ const apiCall = async (action: string, method: 'GET' | 'POST' = 'GET', payload?:
       return json;
     } catch (e) {
       console.warn("API returned invalid JSON:", text);
-      throw new Error("Invalid API Response");
+      throw new Error("Invalid API Response: " + text.substring(0, 50));
     }
   } catch (error) {
     console.error(`API Call Failed [${action}]:`, error);

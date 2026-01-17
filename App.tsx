@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -32,6 +30,11 @@ const App: React.FC = () => {
   const [progressCourse, setProgressCourse] = useState<Course | null>(null);
   
   const [loading, setLoading] = useState(false);
+  
+  // Login State
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
 
   // Theme State
@@ -85,31 +88,48 @@ const App: React.FC = () => {
       }
 
     } catch (error) {
-      console.error("Failed to fetch data from mock sheets", error);
+      console.error("Failed to fetch data from sheets", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleLogin = async (email?: string) => {
-    // Simulate login for demo purposes
-    const targetEmail = email || 'abebe@fadlab.tech';
-    const student = await sheetService.getStudentProfile(targetEmail);
-    if (student) {
-      setAuth({ isAuthenticated: true, user: student });
-      // Redirect admin to admin dashboard initially, else standard dashboard
-      if (student.role === 'admin') {
-        setCurrentView('admin');
+    setIsLoggingIn(true);
+    setLoginError(null);
+    try {
+      // Use provided email or default demo student email
+      const targetEmail = email || 'abebe@fadlab.tech';
+      
+      const student = await sheetService.getStudentProfile(targetEmail);
+      
+      if (student) {
+        setAuth({ isAuthenticated: true, user: student });
+        // Redirect admin to admin dashboard initially, else standard dashboard
+        if (student.role === 'admin') {
+          setCurrentView('admin');
+        } else {
+          setCurrentView('dashboard');
+        }
+        // Start background fetch for dashboard data
+        fetchData(student);
       } else {
-        setCurrentView('dashboard');
+        setLoginError("Account not found. Please check your email or contact support.");
       }
-      fetchData(student);
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      setLoginError(error.message || "Failed to connect to FadLab servers. Please try again.");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const handleLogout = () => {
     setAuth({ isAuthenticated: false, user: null });
     setCurrentView('dashboard');
+    setCourses([]);
+    setEnrollments([]);
+    setLeaderboard([]);
   };
 
   const handlePlanCourse = (course: Course) => {
@@ -219,7 +239,7 @@ const App: React.FC = () => {
   };
 
   if (!auth.isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={loginError} />;
   }
 
   const presetAvatars = [
