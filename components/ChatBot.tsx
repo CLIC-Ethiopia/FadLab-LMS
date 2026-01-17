@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Loader2, User, Bot, Sparkles } from 'lucide-react';
+import { MessageSquare, X, Send, Loader2, User, Bot, Sparkles, Trash2 } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { Course, Student, Enrollment, ChatMessage } from '../types';
 
@@ -15,16 +15,38 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
+  
+  // Initialize state from localStorage if available
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fadlab_chat_history');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Hydrate date strings back to Date objects
+          return parsed.map((m: any) => ({
+            ...m,
+            timestamp: new Date(m.timestamp)
+          }));
+        } catch (e) {
+          console.error("Failed to recover chat history", e);
+        }
+      }
+    }
+    return [{
       id: 'welcome',
       role: 'model',
       text: "Hello! I'm **Prof. Fad**, your AI academic advisor. 🎓\n\nI can help you find courses, check your progress, or answer questions about FadLab. How can I assist you today?",
       timestamp: new Date()
-    }
-  ]);
+    }];
+  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Persist messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('fadlab_chat_history', JSON.stringify(messages));
+  }, [messages]);
 
   const suggestedPrompts = [
     "What is STEAM-IE?",
@@ -84,6 +106,20 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
     }
   };
 
+  const handleClearHistory = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to clear your chat history?")) {
+      const welcomeMsg: ChatMessage = {
+        id: 'welcome',
+        role: 'model',
+        text: "History cleared. How can I help you now?",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMsg]);
+      localStorage.removeItem('fadlab_chat_history');
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -121,17 +157,26 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
         <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-scale-in origin-bottom-right">
           
           {/* Header */}
-          <div className="bg-slate-900 dark:bg-slate-800 p-4 flex items-center gap-3 border-b border-slate-700">
-            <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
+          <div className="bg-slate-900 dark:bg-slate-800 p-4 flex items-center justify-between border-b border-slate-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
+                <Bot className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white">Prof. Fad</h3>
+                <p className="text-xs text-indigo-200 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  Online • AI Advisor
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-white">Prof. Fad</h3>
-              <p className="text-xs text-indigo-200 flex items-center gap-1">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                Online • AI Advisor
-              </p>
-            </div>
+            <button 
+              onClick={handleClearHistory}
+              className="text-slate-400 hover:text-red-400 transition-colors p-2"
+              title="Clear Chat History"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Messages Area */}

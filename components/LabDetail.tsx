@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Lab, Asset, DigitalAsset, Student, Enrollment } from '../types';
 import { sheetService } from '../services/sheetService';
@@ -135,16 +134,16 @@ const LabDetail: React.FC<LabDetailProps> = ({ lab, user, enrollments, onBack })
              <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                {categories.map(cat => (
                  <button
-                   key={cat}
-                   onClick={() => setSelectedCategory(cat)}
+                   key={cat as string}
+                   onClick={() => setSelectedCategory(cat as string)}
                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border
                      ${selectedCategory === cat 
                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'
                      }`}
                  >
-                   {getSubCategoryIcon(cat)}
-                   {cat}
+                   {getSubCategoryIcon(cat as string)}
+                   {cat as string}
                  </button>
                ))}
              </div>
