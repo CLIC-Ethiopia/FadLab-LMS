@@ -11,6 +11,8 @@ interface ChatBotProps {
   leaderboard: Student[];
 }
 
+const WELCOME_TEXT = "Hello! I'm **Prof. Fad**, your AI academic advisor. 🎓\n\nI can help you find courses, check your progress, or answer questions about FadLab. How can I assist you today?";
+
 const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboard }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -19,24 +21,24 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
   // Initialize state from localStorage if available
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('fadlab_chat_history');
-      if (saved) {
-        try {
+      try {
+        const saved = localStorage.getItem('fadlab_chat_history');
+        if (saved) {
           const parsed = JSON.parse(saved);
           // Hydrate date strings back to Date objects
           return parsed.map((m: any) => ({
             ...m,
             timestamp: new Date(m.timestamp)
           }));
-        } catch (e) {
-          console.error("Failed to recover chat history", e);
         }
+      } catch (e) {
+        console.error("Failed to recover chat history", e);
       }
     }
     return [{
       id: 'welcome',
       role: 'model',
-      text: "Hello! I'm **Prof. Fad**, your AI academic advisor. 🎓\n\nI can help you find courses, check your progress, or answer questions about FadLab. How can I assist you today?",
+      text: WELCOME_TEXT,
       timestamp: new Date()
     }];
   });
@@ -45,7 +47,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
 
   // Persist messages to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem('fadlab_chat_history', JSON.stringify(messages));
+    try {
+      localStorage.setItem('fadlab_chat_history', JSON.stringify(messages));
+    } catch (e) {
+      console.error("Failed to save chat history", e);
+    }
   }, [messages]);
 
   const suggestedPrompts = [
@@ -107,16 +113,25 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
   };
 
   const handleClearHistory = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
+    
     if (window.confirm("Are you sure you want to clear your chat history?")) {
-      const welcomeMsg: ChatMessage = {
-        id: 'welcome',
-        role: 'model',
-        text: "History cleared. How can I help you now?",
-        timestamp: new Date()
-      };
-      setMessages([welcomeMsg]);
-      localStorage.removeItem('fadlab_chat_history');
+      const resetMessages: ChatMessage[] = [
+        {
+          id: 'welcome',
+          role: 'model',
+          text: WELCOME_TEXT,
+          timestamp: new Date()
+        },
+        {
+          id: `cleared-${Date.now()}`,
+          role: 'model',
+          text: "History cleared.",
+          timestamp: new Date()
+        }
+      ];
+      setMessages(resetMessages);
     }
   };
 
@@ -142,6 +157,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
     <>
       {/* Toggle Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center
           ${isOpen 
@@ -171,8 +187,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
               </div>
             </div>
             <button 
+              type="button"
               onClick={handleClearHistory}
-              className="text-slate-400 hover:text-red-400 transition-colors p-2"
+              className="text-slate-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-slate-800"
               title="Clear Chat History"
             >
               <Trash2 className="w-4 h-4" />
@@ -227,6 +244,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
                 {suggestedPrompts.map((prompt, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => handleSend(prompt)}
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium rounded-full border border-slate-200 dark:border-slate-700 transition-colors whitespace-nowrap snap-start"
                   >
@@ -251,6 +269,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
                 className="w-full pl-4 pr-12 py-3 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl border-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder-slate-400"
               />
               <button
+                type="button"
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isLoading}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
