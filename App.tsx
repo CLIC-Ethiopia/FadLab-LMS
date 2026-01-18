@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -16,7 +15,7 @@ import InnoLab from './components/InnoLab';
 import LabManager from './components/LabManager';
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
-import { LayoutDashboard, BookOpen, Settings, LogOut, Sheet, Loader2, Moon, Sun, User, Camera, Upload, ShieldCheck, RefreshCw, Lightbulb, Users, FlaskConical, Wrench } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Settings, LogOut, Loader2, Moon, Sun, User, Upload, ShieldCheck, RefreshCw, Lightbulb, Users, FlaskConical, Wrench } from 'lucide-react';
 
 const App: React.FC = () => {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false, user: null });
@@ -91,20 +90,16 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLogin = async (email?: string) => {
-    // Simulate login for demo purposes
-    const targetEmail = email || 'abebe@fadlab.tech';
-    const student = await sheetService.getStudentProfile(targetEmail);
-    if (student) {
-      setAuth({ isAuthenticated: true, user: student });
-      // Redirect admin to admin dashboard initially, else standard dashboard
-      if (student.role === 'admin') {
-        setCurrentView('admin');
-      } else {
-        setCurrentView('dashboard');
-      }
-      fetchData(student);
+  const handleLogin = async (student: Student) => {
+    setAuth({ isAuthenticated: true, user: student });
+    
+    // Redirect admin to admin dashboard initially, else standard dashboard
+    if (student.role === 'admin') {
+      setCurrentView('admin');
+    } else {
+      setCurrentView('dashboard');
     }
+    fetchData(student);
   };
 
   const handleLogout = () => {
@@ -165,6 +160,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Demo functionality to toggle role, mainly for testing
   const handleSwitchRole = async () => {
     if (!auth.user) return;
     const newRole = auth.user.role === 'admin' ? 'student' : 'admin';

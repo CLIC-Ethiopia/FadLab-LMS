@@ -1,3 +1,4 @@
+
 import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Project, Lab, Asset, Booking, DigitalAsset } from '../types';
 
 /**
@@ -6,13 +7,17 @@ import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Pr
  * We use a "Hybrid" approach:
  * 1. Try to connect to the Google Sheet API (if VITE_GOOGLE_SHEET_API_URL is set).
  * 2. If the API fails or is not configured, fall back to local MOCK_DATA.
+ * 3. NEW: We persist MOCK_DATA to localStorage to act as a client-side database.
  */
 const API_URL = import.meta.env.VITE_GOOGLE_SHEET_API_URL || '';
 
-// --- MOCK DATA STORE ---
-// This acts as both the "Offline Database" and the "Optimistic Cache"
+// Admin Credentials
+const ADMIN_EMAIL = "frehun.demissie@gmail.com";
+const ADMIN_PASS = "Assefa2!";
 
-let MOCK_COURSES: Course[] = [
+// --- DEFAULT DATA (Used if localStorage is empty) ---
+
+const DEFAULT_COURSES: Course[] = [
   {
     id: 'c1',
     title: 'Introduction to STEAM',
@@ -105,7 +110,7 @@ let MOCK_COURSES: Course[] = [
   }
 ];
 
-const MOCK_STUDENTS: Student[] = [
+const DEFAULT_STUDENTS: Student[] = [
   {
     id: 's1',
     name: 'Abebe Bikila',
@@ -148,10 +153,10 @@ const MOCK_STUDENTS: Student[] = [
     rank: 3
   },
   {
-    id: 'admin1',
-    name: 'System Administrator',
-    email: 'admin@fadlab.tech',
-    avatar: 'https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff',
+    id: 'admin_main',
+    name: 'Frehun Demissie',
+    email: ADMIN_EMAIL,
+    avatar: 'https://ui-avatars.com/api/?name=Frehun+Demissie&background=0D8ABC&color=fff',
     role: 'admin',
     enrolledCourses: [],
     points: 0,
@@ -159,7 +164,7 @@ const MOCK_STUDENTS: Student[] = [
   }
 ];
 
-const MOCK_ENROLLMENTS: Enrollment[] = [
+const DEFAULT_ENROLLMENTS: Enrollment[] = [
   {
     studentId: 's1',
     courseId: 'c1',
@@ -186,6 +191,53 @@ const MOCK_ENROLLMENTS: Enrollment[] = [
   }
 ];
 
+const DEFAULT_PROJECTS: Project[] = [
+  {
+    id: 'p1',
+    title: 'Solar Auto-Irrigation',
+    description: 'An IoT based system that uses soil moisture sensors to automatically water crops using solar power. Designed for small-holder farmers in rural Ethiopia.',
+    category: CourseCategory.Engineering,
+    tags: ['IoT', 'Solar', 'AgriTech'],
+    thumbnail: 'https://picsum.photos/500/300?random=201',
+    authorId: 's1',
+    authorName: 'Abebe Bikila',
+    authorAvatar: 'https://picsum.photos/100/100?random=10',
+    likes: 45,
+    status: 'Prototype',
+    githubUrl: 'https://github.com/abebe/solar-irrigation',
+    timestamp: '2023-11-10'
+  }
+];
+
+// --- LOCAL STORAGE INITIALIZATION ---
+
+const loadFromStorage = <T>(key: string, defaultValue: T): T => {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    console.error(`Error loading ${key} from storage`, e);
+    return defaultValue;
+  }
+};
+
+const saveToStorage = (key: string, data: any) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`Error saving ${key} to storage`, e);
+  }
+};
+
+// Initialize State from Storage or Defaults
+let MOCK_COURSES: Course[] = loadFromStorage('fadlab_courses', DEFAULT_COURSES);
+let MOCK_STUDENTS: Student[] = loadFromStorage('fadlab_students', DEFAULT_STUDENTS);
+let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage('fadlab_enrollments', DEFAULT_ENROLLMENTS);
+let MOCK_PROJECTS: Project[] = loadFromStorage('fadlab_projects', DEFAULT_PROJECTS);
+
+// Static data (not editable yet)
 const MOCK_SOCIAL_POSTS: SocialPost[] = [
   {
     id: 'fb1',
@@ -212,78 +264,6 @@ const MOCK_SOCIAL_POSTS: SocialPost[] = [
     shares: 12,
     timestamp: '5 hours ago',
     tags: ['Community', 'Events']
-  },
-  {
-    id: 'fb3',
-    source: 'FadLab',
-    sourceUrl: 'https://facebook.com/fadlab',
-    authorAvatar: 'https://ui-avatars.com/api/?name=Fad+Lab&background=0D8ABC&color=fff',
-    content: '📢 Hackathon Announcement! "Build for Impact 2024" is starting next month. Form your teams in the LMS and get ready to solve real-world challenges. Prizes include internship opportunities! 🏆',
-    likes: 256,
-    comments: 84,
-    shares: 110,
-    timestamp: '1 day ago',
-    tags: ['Hackathon', 'Announcement']
-  },
-  {
-    id: 'fb4',
-    source: 'CLIC Ethiopia',
-    sourceUrl: 'https://facebook.com/clicethiopia',
-    authorAvatar: 'https://ui-avatars.com/api/?name=CLIC+Ethiopia&background=F59E0B&color=fff',
-    content: 'Did you know? The "A" in STEAM stands for Arts, which is crucial for design thinking. Our new workshop explores how traditional Ethiopian patterns can influence modern architectural design. 🇪🇹✨',
-    image: 'https://picsum.photos/600/300?random=103',
-    likes: 156,
-    comments: 24,
-    shares: 30,
-    timestamp: '2 days ago',
-    tags: ['Culture', 'Design']
-  }
-];
-
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: 'p1',
-    title: 'Solar Auto-Irrigation',
-    description: 'An IoT based system that uses soil moisture sensors to automatically water crops using solar power. Designed for small-holder farmers in rural Ethiopia.',
-    category: CourseCategory.Engineering,
-    tags: ['IoT', 'Solar', 'AgriTech'],
-    thumbnail: 'https://picsum.photos/500/300?random=201',
-    authorId: 's1',
-    authorName: 'Abebe Bikila',
-    authorAvatar: 'https://picsum.photos/100/100?random=10',
-    likes: 45,
-    status: 'Prototype',
-    githubUrl: 'https://github.com/abebe/solar-irrigation',
-    timestamp: '2023-11-10'
-  },
-  {
-    id: 'p2',
-    title: 'Recycled Plastic Bricks',
-    description: 'Converting PET bottles into durable, interlocking construction bricks. A low-cost housing solution that addresses plastic pollution.',
-    category: CourseCategory.Innovation,
-    tags: ['Sustainability', 'Materials', 'Construction'],
-    thumbnail: 'https://picsum.photos/500/300?random=202',
-    authorId: 's3',
-    authorName: 'Haile Gebrselassie',
-    authorAvatar: 'https://picsum.photos/100/100?random=12',
-    likes: 32,
-    status: 'Idea',
-    timestamp: '2023-11-12'
-  },
-  {
-    id: 'p3',
-    title: 'Ethiopian Pattern Generator',
-    description: 'A generative art algorithm that creates modern textile designs based on traditional Tibeb patterns using p5.js.',
-    category: CourseCategory.Arts,
-    tags: ['CreativeCoding', 'Culture', 'Design'],
-    thumbnail: 'https://picsum.photos/500/300?random=203',
-    authorId: 's2',
-    authorName: 'Tirunesh Dibaba',
-    authorAvatar: 'https://picsum.photos/100/100?random=11',
-    likes: 88,
-    status: 'Launched',
-    demoUrl: 'https://example.com/demo',
-    timestamp: '2023-10-25'
   }
 ];
 
@@ -299,7 +279,6 @@ const MOCK_LABS: Lab[] = [
     consumables: [
       { name: 'PLA Filament (White)', status: 'In Stock', unit: '15 Spools' },
       { name: 'Plywood (3mm)', status: 'Low Stock', unit: '5 Sheets' },
-      { name: 'Solder Wire', status: 'In Stock', unit: '5 kg' },
     ]
   },
   {
@@ -310,10 +289,7 @@ const MOCK_LABS: Lab[] = [
     icon: 'Monitor',
     capacity: 15,
     location: 'Building B, Room 204',
-    consumables: [
-      { name: 'VR Face Covers', status: 'In Stock', unit: '50 units' },
-      { name: 'Printer Paper (A3)', status: 'Out of Stock', unit: '0 Reams' },
-    ]
+    consumables: []
   },
   {
     id: 'l3',
@@ -323,10 +299,7 @@ const MOCK_LABS: Lab[] = [
     icon: 'Sprout',
     capacity: 50,
     location: 'Campus Gardens, Zone 3',
-    consumables: [
-      { name: 'pH Buffer Solution', status: 'In Stock', unit: '10 Bottles' },
-      { name: 'Nutrient Mix A', status: 'Low Stock', unit: '2 Liters' },
-    ]
+    consumables: []
   },
   {
     id: 'l4',
@@ -336,53 +309,25 @@ const MOCK_LABS: Lab[] = [
     icon: 'Briefcase',
     capacity: 30,
     location: 'Building C, Room 301',
-    consumables: [
-      { name: 'Whiteboard Markers', status: 'In Stock', unit: '20 Pack' },
-      { name: 'Coffee Beans', status: 'In Stock', unit: '5 kg' },
-    ]
+    consumables: []
   }
 ];
 
 const MOCK_ASSETS: Asset[] = [
   { id: 'a1', labId: 'l1', name: 'Prusa MK3 - 01', model: '3D Printer', subCategory: 'Printers', status: 'Available', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301', specs: ['Build Vol: 25x21x21cm', 'Nozzle: 0.4mm'] },
   { id: 'a2', labId: 'l1', name: 'Prusa MK3 - 02', model: '3D Printer', subCategory: 'Printers', status: 'In Use', certificationRequired: 'c5', image: 'https://picsum.photos/200/200?random=301', specs: ['Build Vol: 25x21x21cm', 'Nozzle: 0.6mm'] },
-  { id: 'a3', labId: 'l1', name: 'Epilog Laser Fusion', model: 'Laser Cutter', subCategory: 'CNC & Cutters', status: 'Maintenance', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=302', specs: ['60W CO2 Laser', 'Bed: 24x12 inch'] },
-  { id: 'a8', labId: 'l1', name: 'ShopBot Desktop', model: 'CNC Router', subCategory: 'CNC & Cutters', status: 'Available', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=310', specs: ['Spindle: 1HP', 'Cut Area: 24x18 inch'] },
-  { id: 'a9', labId: 'l1', name: 'Hakko Soldering Station 1', model: 'Electronics Bench', subCategory: 'Electronics', status: 'Available', image: 'https://picsum.photos/200/200?random=311', specs: ['Temp: 200-480°C', 'Includes Fume Extractor'] },
-  { id: 'a10', labId: 'l1', name: 'Roland Vinyl Cutter', model: 'Vinyl Cutter', subCategory: 'CNC & Cutters', status: 'Available', image: 'https://picsum.photos/200/200?random=312', specs: ['Width: 24 inch', 'Force: 350g'] },
-  { id: 'a4', labId: 'l2', name: 'Oculus Quest 3 - Unit 1', model: 'VR Headset', subCategory: 'XR/VR', status: 'Available', image: 'https://picsum.photos/200/200?random=303', specs: ['128GB Storage', 'Includes Controllers'] },
-  { id: 'a5', labId: 'l2', name: 'Alienware Aurora R15', model: 'Sim Workstation', subCategory: 'Workstations', status: 'Available', certificationRequired: 'c7', image: 'https://picsum.photos/200/200?random=304', specs: ['RTX 4090', '64GB RAM', 'SolidWorks Installed'] },
-  { id: 'a11', labId: 'l2', name: 'Wacom Cintiq Pro', model: 'Drawing Tablet', subCategory: 'Peripherals', status: 'In Use', certificationRequired: 'c7', image: 'https://picsum.photos/200/200?random=313', specs: ['24 inch 4K Display', 'Pro Pen 2'] },
-  { id: 'a12', labId: 'l2', name: 'HTC Vive Pro Eye', model: 'VR Headset', subCategory: 'XR/VR', status: 'Available', image: 'https://picsum.photos/200/200?random=314', specs: ['Eye Tracking', 'Requires PC Tether'] },
-  { id: 'a6', labId: 'l3', name: 'DJI Mavic 3M', model: 'Multispectral Drone', subCategory: 'Drones', status: 'Available', certificationRequired: 'c2', image: 'https://picsum.photos/200/200?random=305', specs: ['RGB + Multispectral Cam', 'RTK Module'] },
-  { id: 'a7', labId: 'l3', name: 'Soil Sensor Kit A', model: 'IoT Kit', subCategory: 'Sensors', status: 'In Use', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=306', specs: ['NPK Sensor', 'Moisture/Temp/EC'] },
-  { id: 'a13', labId: 'l3', name: 'LoRaWAN Gateway', model: 'Network Node', subCategory: 'Connectivity', status: 'Available', image: 'https://picsum.photos/200/200?random=315', specs: ['Range: 10km', '8 Channels'] },
-  { id: 'a14', labId: 'l3', name: 'Dobot Magician', model: 'Robotic Arm', subCategory: 'Robotics', status: 'Available', certificationRequired: 'c3', image: 'https://picsum.photos/200/200?random=316', specs: ['Payload: 500g', 'End Effectors: Gripper/Suction'] },
-  { id: 'a15', labId: 'l4', name: 'Sony A7III Kit', model: 'Camera Kit', subCategory: 'Media', status: 'Available', image: 'https://picsum.photos/200/200?random=317', specs: ['24-70mm Lens', '4K Video'] },
-  { id: 'a16', labId: 'l4', name: 'Rode Caster Pro', model: 'Podcast Station', subCategory: 'Media', status: 'Available', image: 'https://picsum.photos/200/200?random=318', specs: ['4 Mic Inputs', 'Bluetooth'] },
-  { id: 'a17', labId: 'l4', name: 'Epson 4K Projector', model: 'Presentation', subCategory: 'AV Equipment', status: 'In Use', image: 'https://picsum.photos/200/200?random=319', specs: ['3000 Lumens', 'HDMI/Wireless'] },
 ];
 
 const MOCK_DIGITAL_ASSETS: DigitalAsset[] = [
   { id: 'da1', labId: 'l1', title: 'Gear Assembly STL', type: 'Model', description: 'Standard gear set for robotics projects.', url: '/models/gear_assembly.stl', authorName: 'System', downloads: 120, size: '45 MB' },
-  { id: 'da2', labId: 'l1', title: 'Laser Cut Box Template', type: 'Template', description: 'Finger-joint box generator files.', url: '/models/box_template.dxf', authorName: 'Prof. Frehun', downloads: 85, size: '2 MB' },
-  { id: 'da3', labId: 'l2', title: 'Unity VR Starter Kit', type: 'Code', description: 'Boilerplate for VR interactions.', url: '/google_drive/VR/StarterKit.zip', authorName: 'System', downloads: 200, size: '150 MB' },
-  { id: 'da4', labId: 'l4', title: 'Startup Financial Model', type: 'Template', description: 'Excel sheet for calculating runway and burn rate.', url: '/google_drive/Finance/startup_model_v1.xlsx', authorName: 'Lecturer Mulunesh', downloads: 340, size: '1 MB' },
 ];
 
-let MOCK_BOOKINGS: Booking[] = [
-  { id: 'b1', assetId: 'a2', studentId: 's2', date: new Date().toISOString().split('T')[0], startTime: '10:00', durationHours: 2, purpose: 'Prototyping chassis' }
-];
+let MOCK_BOOKINGS: Booking[] = loadFromStorage('fadlab_bookings', []);
 
 // --- NETWORK UTILITIES ---
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-/**
- * Robust fetcher that tries to access the Google Sheet API (via Apps Script Web App).
- * If the API URL is missing, or the network request fails, it runs the fallback function
- * to return simulated local data.
- */
 async function fetchWithFallback<T>(
     action: string, 
     fallback: () => Promise<T>, 
@@ -390,7 +335,6 @@ async function fetchWithFallback<T>(
     payload?: any
 ): Promise<T> {
     if (!API_URL) {
-        // No API configured, use mock
         return fallback();
     }
 
@@ -398,8 +342,6 @@ async function fetchWithFallback<T>(
         let url = `${API_URL}?action=${action}`;
         const options: RequestInit = {
             method,
-            // For Simple Requests (preventing CORS preflight), we might omit headers.
-            // But usually we can send text/plain.
         };
 
         if (method === 'GET' && payload) {
@@ -407,7 +349,6 @@ async function fetchWithFallback<T>(
             Object.keys(payload).forEach(key => params.append(key, String(payload[key])));
             url += `&${params.toString()}`;
         } else if (method === 'POST') {
-             // Google Apps Script doPost(e) reads e.postData.contents
             options.body = JSON.stringify({ action, ...payload });
         }
 
@@ -422,7 +363,6 @@ async function fetchWithFallback<T>(
            throw new Error(result.error || 'Unknown Script Error');
         }
         
-        // Return the data portion of the response
         return (result.data || result) as T;
 
     } catch (error) {
@@ -434,6 +374,76 @@ async function fetchWithFallback<T>(
 // --- EXPORTED SERVICE ---
 
 export const sheetService = {
+  
+  // --- AUTH METHODS ---
+
+  async verifyAdmin(email: string, pass: string): Promise<Student> {
+    await delay(1000);
+    if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
+      const admin = MOCK_STUDENTS.find(s => s.email === email && s.role === 'admin');
+      if (admin) return admin;
+      // Fallback if admin removed from array but creds match
+      return {
+        id: 'admin_sys',
+        name: 'Frehun Demissie',
+        email: ADMIN_EMAIL,
+        role: 'admin',
+        avatar: 'https://ui-avatars.com/api/?name=Admin',
+        enrolledCourses: [],
+        points: 0,
+        rank: 0
+      };
+    }
+    throw new Error("Invalid Administrator Credentials");
+  },
+
+  async loginWithSocial(provider: 'google' | 'facebook'): Promise<Student> {
+    await delay(1500); // Simulate OAuth popup delay
+    
+    // Simulate finding a user or creating a new one
+    // For demo: Facebook -> "Tirunesh" (Existing), Google -> "Demo User" (New or Existing)
+    
+    if (provider === 'facebook') {
+      const existing = MOCK_STUDENTS.find(s => s.email === 'tirunesh@fadlab.tech');
+      if (existing) return existing;
+    }
+
+    // Google Login Logic (Simulated)
+    const demoEmail = "student.demo@gmail.com";
+    let user = MOCK_STUDENTS.find(s => s.email === demoEmail);
+
+    if (!user) {
+      // Create new user (First time login)
+      user = {
+        id: `s_${Date.now()}`,
+        name: "New Student",
+        email: demoEmail,
+        avatar: `https://picsum.photos/100/100?random=${Date.now()}`,
+        role: 'student',
+        enrolledCourses: [],
+        studyPlans: [],
+        projectIds: [],
+        points: 0,
+        rank: MOCK_STUDENTS.length + 1
+      };
+      // Register them
+      return this.registerStudent(user);
+    }
+
+    return user;
+  },
+
+  async registerStudent(student: Student): Promise<Student> {
+    const fallback = async () => {
+      MOCK_STUDENTS.push(student);
+      saveToStorage('fadlab_students', MOCK_STUDENTS);
+      return student;
+    };
+    // We try to POST to sheet to save the user in the cloud
+    return fetchWithFallback<Student>('registerStudent', fallback, 'POST', student);
+  },
+
+  // --- COURSE & DATA METHODS ---
   
   async getCourses(): Promise<Course[]> {
     const fallback = async () => {
@@ -451,6 +461,7 @@ export const sheetService = {
             id: `c${Date.now()}`
         };
         MOCK_COURSES.push(newCourse);
+        saveToStorage('fadlab_courses', MOCK_COURSES);
         return newCourse;
     };
     return fetchWithFallback<Course>('addCourse', fallback, 'POST', course);
@@ -460,6 +471,7 @@ export const sheetService = {
     const fallback = async () => {
         await delay(800);
         MOCK_COURSES = MOCK_COURSES.filter(c => c.id !== courseId);
+        saveToStorage('fadlab_courses', MOCK_COURSES);
     };
     return fetchWithFallback<void>('deleteCourse', fallback, 'POST', { courseId });
   },
@@ -501,6 +513,7 @@ export const sheetService = {
         const student = MOCK_STUDENTS.find(s => s.id === studentId);
         if (student) {
             student.avatar = avatarUrl;
+            saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
     };
     return fetchWithFallback<void>('updateAvatar', fallback, 'POST', { studentId, avatarUrl });
@@ -531,6 +544,7 @@ export const sheetService = {
             if (!student.enrolledCourses.includes(courseId)) {
                 student.enrolledCourses.push(courseId);
             }
+            saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
 
         const newEnrollment: Enrollment = {
@@ -542,6 +556,7 @@ export const sheetService = {
           targetCompletionDate: plan.targetDate
         };
         MOCK_ENROLLMENTS.push(newEnrollment);
+        saveToStorage('fadlab_enrollments', MOCK_ENROLLMENTS);
         return newEnrollment;
     };
     
@@ -581,12 +596,14 @@ export const sheetService = {
           timestamp: new Date().toISOString().split('T')[0]
         };
         MOCK_PROJECTS.unshift(newProject);
+        saveToStorage('fadlab_projects', MOCK_PROJECTS);
 
         const student = MOCK_STUDENTS.find(s => s.id === project.authorId);
         if (student) {
           if (!student.projectIds) student.projectIds = [];
           student.projectIds.push(newProject.id);
           student.points += 50; 
+          saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
 
         return newProject;
@@ -634,6 +651,7 @@ export const sheetService = {
         id: `b${Date.now()}`
       };
       MOCK_BOOKINGS.push(newBooking);
+      saveToStorage('fadlab_bookings', MOCK_BOOKINGS);
       
       const asset = MOCK_ASSETS.find(a => a.id === booking.assetId);
       if (asset && booking.date === new Date().toISOString().split('T')[0]) {
