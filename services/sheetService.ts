@@ -381,7 +381,7 @@ export const sheetService = {
     await delay(1000);
     if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
       const admin = MOCK_STUDENTS.find(s => s.email === email && s.role === 'admin');
-      if (admin) return admin;
+      if (admin) return { ...admin };
       // Fallback if admin removed from array but creds match
       return {
         id: 'admin_sys',
@@ -405,7 +405,7 @@ export const sheetService = {
     
     if (provider === 'facebook') {
       const existing = MOCK_STUDENTS.find(s => s.email === 'tirunesh@fadlab.tech');
-      if (existing) return existing;
+      if (existing) return { ...existing };
     }
 
     // Google Login Logic (Simulated)
@@ -430,14 +430,14 @@ export const sheetService = {
       return this.registerStudent(user);
     }
 
-    return user;
+    return { ...user };
   },
 
   async registerStudent(student: Student): Promise<Student> {
     const fallback = async () => {
       MOCK_STUDENTS.push(student);
       saveToStorage('fadlab_students', MOCK_STUDENTS);
-      return student;
+      return { ...student };
     };
     // We try to POST to sheet to save the user in the cloud
     return fetchWithFallback<Student>('registerStudent', fallback, 'POST', student);
@@ -502,7 +502,17 @@ export const sheetService = {
   async getStudentProfile(email: string): Promise<Student | null> {
     const fallback = async () => {
         await delay(800);
-        return MOCK_STUDENTS.find(s => s.email === email) || null;
+        // CRITICAL: We find the student and return a DEEP copy to ensure React re-renders.
+        // Reading directly from MOCK_STUDENTS ensures we get the latest data after an update.
+        const student = MOCK_STUDENTS.find(s => s.email === email);
+        if (!student) return null;
+        
+        return { 
+          ...student,
+          studyPlans: student.studyPlans ? [...student.studyPlans] : [],
+          enrolledCourses: [...student.enrolledCourses],
+          projectIds: student.projectIds ? [...student.projectIds] : []
+        };
     };
     return fetchWithFallback<Student | null>('getStudentProfile', fallback, 'GET', { email });
   },
@@ -510,9 +520,12 @@ export const sheetService = {
   async updateStudentAvatar(studentId: string, avatarUrl: string): Promise<void> {
     const fallback = async () => {
         await delay(800);
-        const student = MOCK_STUDENTS.find(s => s.id === studentId);
-        if (student) {
-            student.avatar = avatarUrl;
+        const index = MOCK_STUDENTS.findIndex(s => s.id === studentId);
+        if (index !== -1) {
+            MOCK_STUDENTS[index] = {
+                ...MOCK_STUDENTS[index],
+                avatar: avatarUrl
+            };
             saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
     };
@@ -531,33 +544,50 @@ export const sheetService = {
     const fallback = async () => {
         await delay(1000);
         
-        const student = MOCK_STUDENTS.find(s => s.id === studentId);
-        if (student) {
-            if (!student.studyPlans) student.studyPlans = [];
-            student.studyPlans = student.studyPlans.filter(sp => sp.courseId !== courseId);
-            student.studyPlans.push({
-                courseId,
-                plannedHoursPerWeek: plan.hoursPerWeek,
-                targetCompletionDate: plan.targetDate
-            });
-
+        // 1. Update Student's enrolledCourses list (simple string array) for quick lookups if needed
+        const index = MOCK_STUDENTS.findIndex(s => s.id === studentId);
+        if (index !== -1) {
+            const student = MOCK_STUDENTS[index];
             if (!student.enrolledCourses.includes(courseId)) {
-                student.enrolledCourses.push(courseId);
+                // Update student immutably
+                 MOCK_STUDENTS[index] = {
+                    ...student,
+                    enrolledCourses: [...student.enrolledCourses, courseId]
+                };
+                saveToStorage('fadlab_students', MOCK_STUDENTS);
             }
-            saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
 
-        const newEnrollment: Enrollment = {
-          studentId,
-          courseId,
-          progress: 0,
-          plannedHoursPerWeek: plan.hoursPerWeek,
-          startDate: new Date().toISOString().split('T')[0],
-          targetCompletionDate: plan.targetDate
-        };
-        MOCK_ENROLLMENTS.push(newEnrollment);
+        // 2. Manage the Enrollment Record (The Source of Truth for Progress & Plans)
+        // Check if enrollment already exists
+        const existingEnrollmentIndex = MOCK_ENROLLMENTS.findIndex(e => e.studentId === studentId && e.courseId === courseId);
+
+        let resultEnrollment: Enrollment;
+
+        if (existingEnrollmentIndex !== -1) {
+             // Update existing enrollment with new plan details
+             const existing = MOCK_ENROLLMENTS[existingEnrollmentIndex];
+             resultEnrollment = {
+                 ...existing,
+                 plannedHoursPerWeek: plan.hoursPerWeek,
+                 targetCompletionDate: plan.targetDate
+             };
+             MOCK_ENROLLMENTS[existingEnrollmentIndex] = resultEnrollment;
+        } else {
+            // Create new
+            resultEnrollment = {
+              studentId,
+              courseId,
+              progress: 0,
+              plannedHoursPerWeek: plan.hoursPerWeek,
+              startDate: new Date().toISOString().split('T')[0],
+              targetCompletionDate: plan.targetDate
+            };
+            MOCK_ENROLLMENTS.push(resultEnrollment);
+        }
+        
         saveToStorage('fadlab_enrollments', MOCK_ENROLLMENTS);
-        return newEnrollment;
+        return resultEnrollment;
     };
     
     return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { studentId, courseId, hoursPerWeek: plan.hoursPerWeek, targetDate: plan.targetDate });
@@ -598,12 +628,15 @@ export const sheetService = {
         MOCK_PROJECTS.unshift(newProject);
         saveToStorage('fadlab_projects', MOCK_PROJECTS);
 
-        const student = MOCK_STUDENTS.find(s => s.id === project.authorId);
-        if (student) {
-          if (!student.projectIds) student.projectIds = [];
-          student.projectIds.push(newProject.id);
-          student.points += 50; 
-          saveToStorage('fadlab_students', MOCK_STUDENTS);
+        const index = MOCK_STUDENTS.findIndex(s => s.id === project.authorId);
+        if (index !== -1) {
+            const student = MOCK_STUDENTS[index];
+            MOCK_STUDENTS[index] = {
+                ...student,
+                projectIds: student.projectIds ? [...student.projectIds, newProject.id] : [newProject.id],
+                points: student.points + 50
+            };
+            saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
 
         return newProject;

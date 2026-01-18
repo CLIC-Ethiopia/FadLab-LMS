@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Student, Enrollment, Course } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -159,20 +158,19 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
           My Study Goals
         </h3>
         
-        {!student.studyPlans || student.studyPlans.length === 0 ? (
+        {enrollments.length === 0 ? (
           <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
             <p>You haven't set any study goals yet.</p>
             <p className="text-sm mt-1">Select a course and click "Plan Study" to set one up.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {student.studyPlans.map((plan, index) => {
-              const course = courses.find(c => c.id === plan.courseId);
-              const enrollment = enrollments.find(e => e.courseId === plan.courseId);
+            {enrollments.map((enrollment, index) => {
+              const course = courses.find(c => c.id === enrollment.courseId);
               
               if (!course) return null;
               
-              const daysLeft = Math.ceil((new Date(plan.targetCompletionDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+              const daysLeft = Math.ceil((new Date(enrollment.targetCompletionDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
               const isOverdue = daysLeft < 0;
 
               return (
@@ -208,7 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                         <Clock className="w-4 h-4" />
                         <span>Commitment</span>
                       </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">{plan.plannedHoursPerWeek} hrs/week</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-200">{enrollment.plannedHoursPerWeek} hrs/week</span>
                     </div>
                     
                     <div className="flex justify-between items-center text-sm">
@@ -217,7 +215,7 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                         <span>Target Date</span>
                       </div>
                       <span className={`font-medium ${isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {new Date(plan.targetCompletionDate).toLocaleDateString()}
+                        {new Date(enrollment.targetCompletionDate).toLocaleDateString()}
                       </span>
                     </div>
 
@@ -232,20 +230,18 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                     </div>
                   </div>
 
-                  {enrollment && (
-                    <div className="mt-4 space-y-2">
-                      <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                        <span>Progress</span>
-                        <span>{enrollment.progress}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
-                          style={{ width: `${enrollment.progress}%` }}
-                        ></div>
-                      </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                      <span>Progress</span>
+                      <span>{enrollment.progress}%</span>
                     </div>
-                  )}
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
+                        style={{ width: `${enrollment.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
 
                   {/* Quick Action Footer - Always Visible */}
                   <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs font-medium">
