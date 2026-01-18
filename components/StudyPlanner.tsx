@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Course } from '../types';
 import { Calendar, Clock, Target, CheckCircle } from 'lucide-react';
@@ -5,32 +6,42 @@ import { Calendar, Clock, Target, CheckCircle } from 'lucide-react';
 interface StudyPlannerProps {
   course: Course | null;
   onClose: () => void;
-  onSave: (courseId: string, plan: { hoursPerWeek: number, targetDate: string }) => void;
+  onSave: (courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }) => void;
 }
 
 const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) => {
   const [hoursPerWeek, setHoursPerWeek] = useState<number>(5);
+  // Default start date to today
+  const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [targetDate, setTargetDate] = useState<string>('');
   const [weeksToFinish, setWeeksToFinish] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (course) {
+    if (course && startDate) {
       const weeks = Math.ceil(course.durationHours / hoursPerWeek);
       setWeeksToFinish(weeks);
       
-      const date = new Date();
-      date.setDate(date.getDate() + (weeks * 7));
-      setTargetDate(date.toISOString().split('T')[0]);
+      const start = new Date(startDate);
+      // Create a new date object for target
+      const target = new Date(start);
+      // Add weeks * 7 days
+      target.setDate(start.getDate() + (weeks * 7));
+      
+      if (!isNaN(target.getTime())) {
+          setTargetDate(target.toISOString().split('T')[0]);
+      } else {
+          setTargetDate('');
+      }
     }
-  }, [course, hoursPerWeek]);
+  }, [course, hoursPerWeek, startDate]);
 
   const handleSave = () => {
-    if (!course) return;
+    if (!course || !targetDate) return;
     setIsSaving(true);
     // Simulate backend call
     setTimeout(() => {
-      onSave(course.id, { hoursPerWeek, targetDate });
+      onSave(course.id, { hoursPerWeek, startDate, targetDate });
       setIsSaving(false);
       onClose();
     }, 1000);
@@ -58,10 +69,25 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) 
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                How many hours can you study per week?
+                1. When do you want to start?
+              </label>
+              <div className="relative">
+                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                 <input 
+                   type="date" 
+                   value={startDate}
+                   onChange={(e) => setStartDate(e.target.value)}
+                   className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                2. Weekly Commitment
               </label>
               <div className="flex items-center gap-4">
                 <input 
@@ -72,26 +98,26 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) 
                   onChange={(e) => setHoursPerWeek(parseInt(e.target.value))}
                   className="flex-grow h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                <span className="w-16 text-center font-bold text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 rounded px-2 py-1">
-                  {hoursPerWeek}h
+                <span className="w-20 text-center font-bold text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 rounded px-2 py-1 text-sm">
+                  {hoursPerWeek} hrs/wk
                 </span>
               </div>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3 transition-colors">
-              <h5 className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+              <h5 className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2 mb-2">
                 <Target className="w-4 h-4" />
-                Projection
+                Plan Projection
               </h5>
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500 dark:text-slate-400">Est. Completion:</span>
+                <span className="text-slate-500 dark:text-slate-400">Est. Duration:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{weeksToFinish} Weeks</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500 dark:text-slate-400">Target Date:</span>
                 <div className="flex items-center gap-2 font-bold text-green-600 dark:text-green-400">
                   <Calendar className="w-4 h-4" />
-                  {new Date(targetDate).toLocaleDateString()}
+                  {targetDate ? new Date(targetDate).toLocaleDateString() : 'Invalid Date'}
                 </div>
               </div>
             </div>
@@ -107,9 +133,9 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) 
           </button>
           <button 
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || !targetDate}
             className={`px-6 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-all flex items-center gap-2
-              ${isSaving ? 'opacity-70 cursor-wait' : ''}
+              ${isSaving || !targetDate ? 'opacity-70 cursor-not-allowed' : ''}
             `}
           >
             {isSaving ? (

@@ -9,7 +9,8 @@ import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Pr
  * 2. If the API fails or is not configured, fall back to local MOCK_DATA.
  * 3. NEW: We persist MOCK_DATA to localStorage to act as a client-side database.
  */
-const API_URL = import.meta.env.VITE_GOOGLE_SHEET_API_URL || '';
+// Defensive check for import.meta.env to avoid runtime errors in some environments
+const API_URL = (import.meta.env && import.meta.env.VITE_GOOGLE_SHEET_API_URL) || '';
 
 // Admin Credentials
 const ADMIN_EMAIL = "frehun.demissie@gmail.com";
@@ -119,8 +120,8 @@ const DEFAULT_STUDENTS: Student[] = [
     role: 'student',
     enrolledCourses: ['c1', 'c2'],
     studyPlans: [
-      { courseId: 'c1', plannedHoursPerWeek: 5, targetCompletionDate: '2023-09-21' },
-      { courseId: 'c2', plannedHoursPerWeek: 3, targetCompletionDate: '2023-12-10' }
+      { courseId: 'c1', plannedHoursPerWeek: 5, startDate: '2023-09-01', targetCompletionDate: '2023-09-21' },
+      { courseId: 'c2', plannedHoursPerWeek: 3, startDate: '2023-10-01', targetCompletionDate: '2023-12-10' }
     ],
     projectIds: ['p1'],
     points: 1250,
@@ -134,7 +135,7 @@ const DEFAULT_STUDENTS: Student[] = [
     role: 'student',
     enrolledCourses: ['c4'],
     studyPlans: [
-      { courseId: 'c4', plannedHoursPerWeek: 4, targetCompletionDate: '2023-11-15' }
+      { courseId: 'c4', plannedHoursPerWeek: 4, startDate: '2023-10-15', targetCompletionDate: '2023-11-15' }
     ],
     projectIds: [],
     points: 980,
@@ -540,7 +541,7 @@ export const sheetService = {
     return fetchWithFallback<Enrollment[]>('getStudentEnrollments', fallback, 'GET', { studentId });
   },
 
-  async enrollStudent(studentId: string, courseId: string, plan: { hoursPerWeek: number, targetDate: string }): Promise<Enrollment> {
+  async enrollStudent(studentId: string, courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }): Promise<Enrollment> {
     const fallback = async () => {
         await delay(1000);
         
@@ -570,6 +571,7 @@ export const sheetService = {
              resultEnrollment = {
                  ...existing,
                  plannedHoursPerWeek: plan.hoursPerWeek,
+                 startDate: plan.startDate,
                  targetCompletionDate: plan.targetDate
              };
              MOCK_ENROLLMENTS[existingEnrollmentIndex] = resultEnrollment;
@@ -580,7 +582,7 @@ export const sheetService = {
               courseId,
               progress: 0,
               plannedHoursPerWeek: plan.hoursPerWeek,
-              startDate: new Date().toISOString().split('T')[0],
+              startDate: plan.startDate,
               targetCompletionDate: plan.targetDate
             };
             MOCK_ENROLLMENTS.push(resultEnrollment);
@@ -590,7 +592,7 @@ export const sheetService = {
         return resultEnrollment;
     };
     
-    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { studentId, courseId, hoursPerWeek: plan.hoursPerWeek, targetDate: plan.targetDate });
+    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { studentId, courseId, hoursPerWeek: plan.hoursPerWeek, startDate: plan.startDate, targetDate: plan.targetDate });
   },
 
   async getLeaderboard(): Promise<Student[]> {

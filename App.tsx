@@ -124,7 +124,7 @@ const App: React.FC = () => {
     setPlannerCourse(course);
   };
 
-  const handleSavePlan = async (courseId: string, plan: { hoursPerWeek: number, targetDate: string }) => {
+  const handleSavePlan = async (courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }) => {
     if (!auth.user) return;
     await sheetService.enrollStudent(auth.user.id, courseId, plan);
     

@@ -31,6 +31,7 @@ export interface Course {
 export interface StudyPlan {
   courseId: string;
   plannedHoursPerWeek: number;
+  startDate: string; // Added start date
   targetCompletionDate: string;
 }
 

@@ -170,26 +170,45 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
               
               if (!course) return null;
               
-              // STRICT DATE VALIDATION
+              // Date Calculations and Status Logic
               const targetDateStr = enrollment.targetCompletionDate;
+              const startDateStr = enrollment.startDate;
+              
               const targetDateObj = new Date(targetDateStr);
-              // Check if string is present and results in a valid date (time is not NaN)
-              const isValidDate = Boolean(targetDateStr) && !isNaN(targetDateObj.getTime());
+              const startDateObj = new Date(startDateStr);
+              const today = new Date();
               
-              let daysLeft: number | null = null;
+              // Validate Dates
+              const hasValidTarget = Boolean(targetDateStr) && !isNaN(targetDateObj.getTime());
+              const hasValidStart = Boolean(startDateStr) && !isNaN(startDateObj.getTime());
               
-              if (isValidDate) {
-                  const now = new Date();
-                  const diff = targetDateObj.getTime() - now.getTime();
-                  daysLeft = Math.ceil(diff / (1000 * 3600 * 24));
-                  
-                  // Sanity check: Ensure calculation didn't result in NaN
-                  if (isNaN(daysLeft)) {
-                      daysLeft = null;
-                  }
+              let statusText = "No Plan Set";
+              let statusColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
+              
+              if (hasValidStart && hasValidTarget) {
+                 // Check if future start
+                 if (today < startDateObj) {
+                    const diffTime = Math.abs(startDateObj.getTime() - today.getTime());
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    statusText = `Starts in ${diffDays} Days`;
+                    statusColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+                 } else {
+                    // It has started. Check if overdue.
+                    const diffTime = targetDateObj.getTime() - today.getTime();
+                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (daysLeft < 0) {
+                        statusText = `${Math.abs(daysLeft)} Days Overdue`;
+                        statusColor = "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+                    } else if (daysLeft <= 7) {
+                        statusText = `${daysLeft} Days Remaining`;
+                        statusColor = "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300";
+                    } else {
+                        statusText = `${daysLeft} Days Remaining`;
+                        statusColor = "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+                    }
+                 }
               }
-
-              const isOverdue = daysLeft !== null && daysLeft < 0;
 
               return (
                 <div 
@@ -228,31 +247,31 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                         {enrollment.plannedHoursPerWeek ? `${enrollment.plannedHoursPerWeek} hrs/week` : 'Not set'}
                       </span>
                     </div>
+
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <PlayCircle className="w-4 h-4" />
+                        <span>Start Date</span>
+                      </div>
+                      <span className="font-medium text-slate-700 dark:text-slate-200">
+                        {hasValidStart ? startDateObj.toLocaleDateString() : 'Not set'}
+                      </span>
+                    </div>
                     
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <Calendar className="w-4 h-4" />
                         <span>Target Date</span>
                       </div>
-                      <span className={`font-medium ${isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {isValidDate ? targetDateObj.toLocaleDateString() : 'Not set'}
+                      <span className="font-medium text-slate-700 dark:text-slate-200">
+                        {hasValidTarget ? targetDateObj.toLocaleDateString() : 'Not set'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center text-xs pt-1">
-                       {daysLeft !== null ? (
-                         <span className={`font-medium px-2 py-1 rounded ${
-                           daysLeft < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                           daysLeft <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
-                           'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                         }`}>
-                           {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
-                         </span>
-                       ) : (
-                         <span className="font-medium px-2 py-1 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                           No target set
-                         </span>
-                       )}
+                       <span className={`font-medium px-2 py-1 rounded w-full text-center ${statusColor}`}>
+                           {statusText}
+                       </span>
                     </div>
                   </div>
 
