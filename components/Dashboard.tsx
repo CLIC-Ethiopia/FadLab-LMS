@@ -170,8 +170,26 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
               
               if (!course) return null;
               
-              const daysLeft = Math.ceil((new Date(enrollment.targetCompletionDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
-              const isOverdue = daysLeft < 0;
+              // STRICT DATE VALIDATION
+              const targetDateStr = enrollment.targetCompletionDate;
+              const targetDateObj = new Date(targetDateStr);
+              // Check if string is present and results in a valid date (time is not NaN)
+              const isValidDate = Boolean(targetDateStr) && !isNaN(targetDateObj.getTime());
+              
+              let daysLeft: number | null = null;
+              
+              if (isValidDate) {
+                  const now = new Date();
+                  const diff = targetDateObj.getTime() - now.getTime();
+                  daysLeft = Math.ceil(diff / (1000 * 3600 * 24));
+                  
+                  // Sanity check: Ensure calculation didn't result in NaN
+                  if (isNaN(daysLeft)) {
+                      daysLeft = null;
+                  }
+              }
+
+              const isOverdue = daysLeft !== null && daysLeft < 0;
 
               return (
                 <div 
@@ -206,7 +224,9 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                         <Clock className="w-4 h-4" />
                         <span>Commitment</span>
                       </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">{enrollment.plannedHoursPerWeek} hrs/week</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-200">
+                        {enrollment.plannedHoursPerWeek ? `${enrollment.plannedHoursPerWeek} hrs/week` : 'Not set'}
+                      </span>
                     </div>
                     
                     <div className="flex justify-between items-center text-sm">
@@ -215,18 +235,24 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                         <span>Target Date</span>
                       </div>
                       <span className={`font-medium ${isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {new Date(enrollment.targetCompletionDate).toLocaleDateString()}
+                        {isValidDate ? targetDateObj.toLocaleDateString() : 'Not set'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center text-xs pt-1">
-                       <span className={`font-medium px-2 py-1 rounded ${
-                         daysLeft < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
-                         daysLeft <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
-                         'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                       }`}>
-                         {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
-                       </span>
+                       {daysLeft !== null ? (
+                         <span className={`font-medium px-2 py-1 rounded ${
+                           daysLeft < 0 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' :
+                           daysLeft <= 7 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                           'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                         }`}>
+                           {isOverdue ? `${Math.abs(daysLeft)} days overdue` : `${daysLeft} days remaining`}
+                         </span>
+                       ) : (
+                         <span className="font-medium px-2 py-1 rounded bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                           No target set
+                         </span>
+                       )}
                     </div>
                   </div>
 
