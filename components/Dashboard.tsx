@@ -13,15 +13,6 @@ interface DashboardProps {
   onResumeLearning?: (course: Course) => void; // Added handler
 }
 
-// Helper: Parse YYYY-MM-DD string into a local Date object set to 00:00:00
-const parseDate = (dateStr: string): Date | null => {
-  if (!dateStr) return null;
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return new Date(dateStr); // Fallback if format is weird
-  // Month is 0-indexed in JS Date constructor
-  return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-};
-
 const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning }) => {
   
   // Calculate stats
@@ -179,23 +170,25 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
               
               if (!course) return null;
               
-              // Normalize today to midnight for correct day diff calculations
+              // Date Calculations and Status Logic
+              const targetDateStr = enrollment.targetCompletionDate;
+              const startDateStr = enrollment.startDate;
+              
+              const targetDateObj = new Date(targetDateStr);
+              const startDateObj = new Date(startDateStr);
               const today = new Date();
-              today.setHours(0, 0, 0, 0);
               
-              const startDateObj = parseDate(enrollment.startDate);
-              const targetDateObj = parseDate(enrollment.targetCompletionDate);
-              
-              const hasValidStart = startDateObj !== null;
-              const hasValidTarget = targetDateObj !== null;
+              // Validate Dates
+              const hasValidTarget = Boolean(targetDateStr) && !isNaN(targetDateObj.getTime());
+              const hasValidStart = Boolean(startDateStr) && !isNaN(startDateObj.getTime());
               
               let statusText = "No Plan Set";
               let statusColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
               
               if (hasValidStart && hasValidTarget) {
                  // Check if future start
-                 if (startDateObj.getTime() > today.getTime()) {
-                    const diffTime = startDateObj.getTime() - today.getTime();
+                 if (today < startDateObj) {
+                    const diffTime = Math.abs(startDateObj.getTime() - today.getTime());
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
                     statusText = `Starts in ${diffDays} Days`;
                     statusColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
