@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Course } from '../types';
 import { Calendar, Clock, Target, CheckCircle } from 'lucide-react';
@@ -5,7 +6,7 @@ import { Calendar, Clock, Target, CheckCircle } from 'lucide-react';
 interface StudyPlannerProps {
   course: Course | null;
   onClose: () => void;
-  onSave: (courseId: string, plan: { hoursPerWeek: number, targetDate: string }) => void;
+  onSave: (courseId: string, plan: { hoursPerWeek: number, targetDate: string }) => Promise<void>;
 }
 
 const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) => {
@@ -25,15 +26,17 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) 
     }
   }, [course, hoursPerWeek]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!course) return;
     setIsSaving(true);
-    // Simulate backend call
-    setTimeout(() => {
-      onSave(course.id, { hoursPerWeek, targetDate });
-      setIsSaving(false);
-      onClose();
-    }, 1000);
+    try {
+        await onSave(course.id, { hoursPerWeek, targetDate });
+    } catch(e) {
+        console.error("Error saving plan:", e);
+    } finally {
+        setIsSaving(false);
+        onClose();
+    }
   };
 
   if (!course) return null;

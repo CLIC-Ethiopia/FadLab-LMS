@@ -381,7 +381,7 @@ export const sheetService = {
     await delay(1000);
     if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
       const admin = MOCK_STUDENTS.find(s => s.email === email && s.role === 'admin');
-      if (admin) return admin;
+      if (admin) return { ...admin };
       // Fallback if admin removed from array but creds match
       return {
         id: 'admin_sys',
@@ -405,7 +405,7 @@ export const sheetService = {
     
     if (provider === 'facebook') {
       const existing = MOCK_STUDENTS.find(s => s.email === 'tirunesh@fadlab.tech');
-      if (existing) return existing;
+      if (existing) return { ...existing };
     }
 
     // Google Login Logic (Simulated)
@@ -430,14 +430,14 @@ export const sheetService = {
       return this.registerStudent(user);
     }
 
-    return user;
+    return { ...user };
   },
 
   async registerStudent(student: Student): Promise<Student> {
     const fallback = async () => {
       MOCK_STUDENTS.push(student);
       saveToStorage('fadlab_students', MOCK_STUDENTS);
-      return student;
+      return { ...student };
     };
     // We try to POST to sheet to save the user in the cloud
     return fetchWithFallback<Student>('registerStudent', fallback, 'POST', student);
@@ -502,7 +502,16 @@ export const sheetService = {
   async getStudentProfile(email: string): Promise<Student | null> {
     const fallback = async () => {
         await delay(800);
-        return MOCK_STUDENTS.find(s => s.email === email) || null;
+        const student = MOCK_STUDENTS.find(s => s.email === email);
+        if (!student) return null;
+        
+        // CRITICAL: Return a deep copy of arrays so React detects state changes
+        return { 
+          ...student,
+          studyPlans: student.studyPlans ? [...student.studyPlans] : [],
+          enrolledCourses: [...student.enrolledCourses],
+          projectIds: student.projectIds ? [...student.projectIds] : []
+        };
     };
     return fetchWithFallback<Student | null>('getStudentProfile', fallback, 'GET', { email });
   },
@@ -534,7 +543,11 @@ export const sheetService = {
         const student = MOCK_STUDENTS.find(s => s.id === studentId);
         if (student) {
             if (!student.studyPlans) student.studyPlans = [];
+            
+            // Remove existing plan for this course if any (overwrite)
             student.studyPlans = student.studyPlans.filter(sp => sp.courseId !== courseId);
+            
+            // Add new plan
             student.studyPlans.push({
                 courseId,
                 plannedHoursPerWeek: plan.hoursPerWeek,
