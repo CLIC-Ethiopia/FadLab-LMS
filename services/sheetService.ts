@@ -592,7 +592,13 @@ export const sheetService = {
         return resultEnrollment;
     };
     
-    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { studentId, courseId, hoursPerWeek: plan.hoursPerWeek, startDate: plan.startDate, targetDate: plan.targetDate });
+    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { 
+      studentId, 
+      courseId, 
+      plannedHoursPerWeek: plan.hoursPerWeek, 
+      startDate: plan.startDate, 
+      targetCompletionDate: plan.targetDate 
+    });
   },
 
   async getLeaderboard(): Promise<Student[]> {
