@@ -545,18 +545,39 @@ export const sheetService = {
     const fallback = async () => {
         await delay(1000);
         
-        // 1. Update Student's enrolledCourses list (simple string array) for quick lookups if needed
-        const index = MOCK_STUDENTS.findIndex(s => s.id === studentId);
-        if (index !== -1) {
-            const student = MOCK_STUDENTS[index];
-            if (!student.enrolledCourses.includes(courseId)) {
-                // Update student immutably
-                 MOCK_STUDENTS[index] = {
-                    ...student,
-                    enrolledCourses: [...student.enrolledCourses, courseId]
-                };
-                saveToStorage('fadlab_students', MOCK_STUDENTS);
+        // 1. Update Student's profile (both enrolledCourses and studyPlans)
+        const studentIndex = MOCK_STUDENTS.findIndex(s => s.id === studentId);
+        if (studentIndex !== -1) {
+            const student = MOCK_STUDENTS[studentIndex];
+            
+            // Update enrolledCourses list
+            let newEnrolledCourses = student.enrolledCourses;
+            if (!newEnrolledCourses.includes(courseId)) {
+                newEnrolledCourses = [...newEnrolledCourses, courseId];
             }
+
+            // Update studyPlans
+            let newStudyPlans = student.studyPlans ? [...student.studyPlans] : [];
+            const planIndex = newStudyPlans.findIndex(p => p.courseId === courseId);
+            const newPlanItem = {
+                courseId,
+                plannedHoursPerWeek: plan.hoursPerWeek,
+                startDate: plan.startDate,
+                targetCompletionDate: plan.targetDate
+            };
+            
+            if (planIndex !== -1) {
+                newStudyPlans[planIndex] = newPlanItem;
+            } else {
+                newStudyPlans.push(newPlanItem);
+            }
+
+            MOCK_STUDENTS[studentIndex] = {
+                ...student,
+                enrolledCourses: newEnrolledCourses,
+                studyPlans: newStudyPlans
+            };
+            saveToStorage('fadlab_students', MOCK_STUDENTS);
         }
 
         // 2. Manage the Enrollment Record (The Source of Truth for Progress & Plans)
@@ -592,7 +613,14 @@ export const sheetService = {
         return resultEnrollment;
     };
     
-    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { studentId, courseId, hoursPerWeek: plan.hoursPerWeek, startDate: plan.startDate, targetDate: plan.targetDate });
+    // Pass targetCompletionDate instead of targetDate to match the Enrollment interface
+    return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { 
+      studentId, 
+      courseId, 
+      hoursPerWeek: plan.hoursPerWeek, 
+      startDate: plan.startDate, 
+      targetCompletionDate: plan.targetDate 
+    });
   },
 
   async getLeaderboard(): Promise<Student[]> {
