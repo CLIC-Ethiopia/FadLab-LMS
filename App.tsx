@@ -382,13 +382,6 @@ const App: React.FC = () => {
             </button>
 
             <button 
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              <span className="font-medium">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-            <button 
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
@@ -407,12 +400,6 @@ const App: React.FC = () => {
               <span className="font-bold text-lg text-slate-800 dark:text-slate-100">FadLab</span>
             </div>
             <div className="flex items-center gap-4">
-              <button 
-                onClick={toggleTheme}
-                className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
               <button onClick={() => setCurrentView(currentView === 'dashboard' ? 'courses' : 'dashboard')}>
                 <LayoutDashboard className="text-slate-600 dark:text-slate-300 w-6 h-6" />
               </button>
@@ -590,6 +577,15 @@ const App: React.FC = () => {
             leaderboard={leaderboard}
           />
         </main>
+
+        {/* Floating Theme Toggle */}
+        <button
+            onClick={toggleTheme}
+            className="fixed bottom-6 left-6 z-50 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+            {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+        </button>
 
         {/* ADMIN LOGIN MODAL */}
         {showAdminLogin && (
