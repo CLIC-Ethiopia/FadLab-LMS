@@ -1,9 +1,18 @@
 
-
-
 import React from 'react';
 import { Student, Enrollment, Course } from '../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  Cell,
+  ReferenceLine,
+  LabelList
+} from 'recharts';
 import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle, Edit } from 'lucide-react';
 
 interface DashboardProps {
@@ -13,8 +22,83 @@ interface DashboardProps {
   leaderboard: Student[];
   onViewDetails: (course: Course) => void;
   onResumeLearning?: (course: Course) => void; 
-  onEditGoal?: (course: Course) => void; // Added handler for editing
+  onEditGoal?: (course: Course) => void; 
 }
+
+// Custom Tooltip for the new chart style
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const completed = payload[0].value;
+    const remaining = 100 - completed;
+    return (
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 animate-fade-in">
+        <p className="font-bold text-slate-800 dark:text-white mb-1">{label}</p>
+        <div className="space-y-1 text-xs">
+          <p className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <span className="text-slate-600 dark:text-slate-300">Progress:</span>
+            <span className="font-bold text-indigo-600 dark:text-indigo-400">{completed}%</span>
+          </p>
+          <p className="text-slate-400 dark:text-slate-500 italic mt-1">
+            {remaining > 0 ? `${remaining}% left to complete` : 'Course Completed! 🎉'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom Background Track (The "Empty" part of the slider)
+const CustomProgressBarBackground = (props: any) => {
+  const { x, y, width, height } = props;
+  return (
+    <rect 
+      x={x} 
+      y={y} 
+      width={width} 
+      height={height} 
+      rx={height / 2} 
+      className="fill-slate-100 dark:fill-slate-800" 
+    />
+  );
+};
+
+// Custom Label (The Circle at the end)
+const CustomProgressBarLabel = (props: any) => {
+  const { x, y, width, height, value } = props;
+  
+  // Center of the circle at the end of the progress bar
+  const cx = x + width;
+  const cy = y + height / 2;
+  const radius = 14; // Larger than the bar height (12) to create the pop-out effect
+
+  // If value is 0, ensure circle doesn't look weirdly placed, but logically x+width is correct
+  // Hide if width is 0? No, show 0.
+
+  return (
+    <g>
+      {/* Circle Background with Gradient */}
+      <circle cx={cx} cy={cy} r={radius} fill="url(#progressGradient)" />
+      
+      {/* Inner Border Ring for separation */}
+      <circle cx={cx} cy={cy} r={radius} fill="none" stroke="white" strokeWidth={2} className="dark:stroke-slate-900" />
+
+      {/* Text Value */}
+      <text 
+        x={cx} 
+        y={cy} 
+        fill="#fff" 
+        textAnchor="middle" 
+        dominantBaseline="central" 
+        fontSize="10" 
+        fontWeight="bold"
+      >
+        {value}
+      </text>
+    </g>
+  );
+};
 
 const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning, onEditGoal }) => {
   
@@ -24,21 +108,15 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
   const inProgressCount = enrollments.filter(e => e.progress < 100).length;
   const completedCount = enrollments.filter(e => e.progress === 100).length;
 
-  // Prepare chart data for progress
+  // Prepare chart data
   const progressData = enrollments.map(e => {
     const course = courses.find(c => c.id === e.courseId);
     return {
-      name: course ? course.title.substring(0, 15) + '...' : 'Unknown',
-      progress: e.progress,
-      color: e.progress === 100 ? '#43A047' : '#1E88E5'
+      name: course ? (course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title) : 'Unknown',
+      completed: e.progress,
+      fullMark: 100
     };
   });
-
-  // Prepare leaderboard data
-  const leaderboardData = leaderboard.slice(0, 5).map(s => ({
-    name: s.name.split(' ')[0],
-    points: s.points
-  }));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -102,22 +180,48 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Progress Chart */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 lg:col-span-2 transition-colors">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Course Progress</h3>
-          <div className="h-64 w-full">
+          <div className="flex justify-between items-center mb-6">
+             <h3 className="text-lg font-bold text-slate-800 dark:text-white">Course Progress</h3>
+             <span className="text-xs font-medium px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded">
+               Benchmark: {avgProgress}%
+             </span>
+          </div>
+          
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={progressData} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" className="dark:opacity-20" />
+              {/* Increased right margin to allow the circle label to overflow without clipping */}
+              <BarChart data={progressData} layout="vertical" margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
+                <defs>
+                  <linearGradient id="progressGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" className="dark:opacity-10" />
                 <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis dataKey="name" type="category" width={100} style={{ fontSize: '12px' }} stroke="#94a3b8" />
-                <Tooltip 
-                  cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={140} 
+                  tick={{ fontSize: 12, fill: '#64748b' }} 
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <Bar dataKey="progress" radius={[0, 4, 4, 0]} barSize={20}>
-                  {progressData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
+                <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
+                
+                <Bar 
+                  dataKey="completed" 
+                  barSize={12} 
+                  radius={[6, 6, 6, 6]} // Rounded ends
+                  fill="url(#progressGradient)"
+                  background={<CustomProgressBarBackground />} // The track
+                  animationDuration={1500}
+                >
+                   {/* The circle at the end */}
+                   <LabelList dataKey="completed" content={<CustomProgressBarLabel />} />
                 </Bar>
+
+                <ReferenceLine x={avgProgress} stroke="#818cf8" strokeDasharray="3 3" strokeOpacity={0.5} />
               </BarChart>
             </ResponsiveContainer>
           </div>
