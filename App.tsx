@@ -146,14 +146,19 @@ const App: React.FC = () => {
   const handleUpdateProgress = async (courseId: string, progress: number) => {
     if (!auth.user) return;
     
+    // OPTIMISTIC UPDATE: Update state immediately so UI is snappy and data isn't lost.
+    // We merge the new progress into the existing enrollment object rather than replacing it
+    // because the backend might return a partial response (e.g., just status) which would 
+    // corrupt the state if swapped directly.
+    setEnrollments(prev => prev.map(e => 
+      e.courseId === courseId ? { ...e, progress } : e
+    ));
+
     try {
-      const updatedEnrollment = await sheetService.updateProgress(auth.user.id, courseId, progress);
-      if (updatedEnrollment) {
-        // Update local state immediately
-        setEnrollments(prev => prev.map(e => e.courseId === courseId ? updatedEnrollment : e));
-      }
+      await sheetService.updateProgress(auth.user.id, courseId, progress);
     } catch (e) {
       console.error("Failed to update progress", e);
+      // Optional: Rollback state here if needed
     }
   };
 
