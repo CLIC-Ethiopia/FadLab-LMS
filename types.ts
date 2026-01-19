@@ -118,6 +118,8 @@ export interface Project {
   status: 'Idea' | 'Prototype' | 'Launched';
   githubUrl?: string;
   demoUrl?: string;
+  blogUrl?: string; // New field
+  docsUrl?: string; // New field
   timestamp: string;
 }
 

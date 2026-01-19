@@ -4,6 +4,7 @@ import { Project, Student, CourseCategory } from '../types';
 import { sheetService } from '../services/sheetService';
 import ProjectCard from './ProjectCard';
 import ProjectUploadModal from './ProjectUploadModal';
+import ProjectDetailsModal from './ProjectDetailsModal'; // New Import
 import { Plus, Search, Filter, Rocket, Loader2, FlaskConical } from 'lucide-react';
 
 interface InnoLabProps {
@@ -14,6 +15,7 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null); // State for Read Modal
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -41,6 +43,28 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
     const matchesCategory = filterCategory === 'All' || p.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleRead = (project: Project) => {
+    setSelectedProject(project);
+  };
+
+  const handleShare = async (project: Project) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `FadLab Project: ${project.title}`,
+          text: `Check out this amazing project by ${project.authorName}: ${project.description}`,
+          url: window.location.href // Ideally, a deep link to the project
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      navigator.clipboard.writeText(`${project.title} by ${project.authorName}\n${project.description}`);
+      alert("Project info copied to clipboard!");
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
@@ -111,7 +135,12 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map(project => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard 
+              key={project.id} 
+              project={project} 
+              onRead={handleRead}
+              onShare={handleShare}
+            />
           ))}
           
           {/* Empty State Call to Action */}
@@ -135,6 +164,13 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
           user={user} 
           onClose={() => setShowUploadModal(false)}
           onSuccess={fetchProjects}
+        />
+      )}
+
+      {selectedProject && (
+        <ProjectDetailsModal 
+          project={selectedProject}
+          onClose={() => setSelectedProject(null)}
         />
       )}
     </div>

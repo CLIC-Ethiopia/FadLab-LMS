@@ -1,13 +1,15 @@
 
 import React from 'react';
 import { Project, CourseCategory } from '../types';
-import { Heart, Github, ExternalLink, User, Calendar, Tag } from 'lucide-react';
+import { Heart, BookOpen, Share2, Tag } from 'lucide-react';
 
 interface ProjectCardProps {
   project: Project;
+  onRead?: (project: Project) => void;
+  onShare?: (project: Project) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onRead, onShare }) => {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
       {/* Thumbnail Area */}
@@ -85,30 +87,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
               </div>
            </div>
            
-           {/* Links */}
+           {/* Buttons: Read & Share */}
            <div className="flex gap-2">
-              {project.githubUrl && (
-                <a 
-                  href={project.githubUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <Github className="w-3.5 h-3.5" />
-                  Code
-                </a>
-              )}
-              {project.demoUrl && (
-                <a 
-                  href={project.demoUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Demo
-                </a>
-              )}
+              <button 
+                onClick={(e) => { e.stopPropagation(); if(onRead) onRead(project); }}
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-slate-900 dark:bg-blue-600 text-white text-xs font-bold hover:bg-slate-800 dark:hover:bg-blue-500 transition-colors shadow-sm"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Read Report
+              </button>
+              
+              <button 
+                onClick={(e) => { e.stopPropagation(); if(onShare) onShare(project); }}
+                className="flex items-center justify-center px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                title="Share Project"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
            </div>
         </div>
       </div>

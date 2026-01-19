@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { CourseCategory, Project, Student } from '../types';
-import { X, Upload, Loader2, Image as ImageIcon, Github, Globe } from 'lucide-react';
+import { X, Upload, Loader2, Image as ImageIcon, Github, Globe, FileText, Download } from 'lucide-react';
 import { sheetService } from '../services/sheetService';
 
 interface ProjectUploadModalProps {
@@ -20,7 +20,9 @@ const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({ user, onClose, 
     tags: '',
     thumbnail: '',
     githubUrl: '',
-    demoUrl: ''
+    demoUrl: '',
+    blogUrl: '',
+    docsUrl: ''
   });
 
   const categories = Object.values(CourseCategory);
@@ -42,7 +44,9 @@ const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({ user, onClose, 
         authorAvatar: user.avatar,
         likes: 0,
         githubUrl: formData.githubUrl,
-        demoUrl: formData.demoUrl
+        demoUrl: formData.demoUrl,
+        blogUrl: formData.blogUrl,
+        docsUrl: formData.docsUrl
       };
 
       await sheetService.addProject(newProject);
@@ -145,18 +149,7 @@ const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({ user, onClose, 
                       onChange={e => setFormData({...formData, thumbnail: e.target.value})}
                     />
                  </div>
-                 <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
-                       <Github className="w-5 h-5" />
-                    </div>
-                    <input 
-                      type="text" 
-                      placeholder="GitHub Repository URL (Optional)"
-                      className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                      value={formData.githubUrl}
-                      onChange={e => setFormData({...formData, githubUrl: e.target.value})}
-                    />
-                 </div>
+                 
                  <div className="flex items-center gap-2">
                     <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
                        <Globe className="w-5 h-5" />
@@ -167,6 +160,45 @@ const ProjectUploadModal: React.FC<ProjectUploadModalProps> = ({ user, onClose, 
                       className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                       value={formData.demoUrl}
                       onChange={e => setFormData({...formData, demoUrl: e.target.value})}
+                    />
+                 </div>
+
+                 <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+                       <FileText className="w-5 h-5" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Blog Post / Article URL (Optional)"
+                      className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      value={formData.blogUrl}
+                      onChange={e => setFormData({...formData, blogUrl: e.target.value})}
+                    />
+                 </div>
+
+                 <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+                       <Download className="w-5 h-5" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Download Document / PDF URL (Optional)"
+                      className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      value={formData.docsUrl}
+                      onChange={e => setFormData({...formData, docsUrl: e.target.value})}
+                    />
+                 </div>
+
+                 <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">
+                       <Github className="w-5 h-5" />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="GitHub Repository URL (Optional)"
+                      className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      value={formData.githubUrl}
+                      onChange={e => setFormData({...formData, githubUrl: e.target.value})}
                     />
                  </div>
               </div>
