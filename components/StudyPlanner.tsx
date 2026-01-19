@@ -1,21 +1,34 @@
 
+
+
 import React, { useState, useEffect } from 'react';
-import { Course } from '../types';
+import { Course, Enrollment } from '../types';
 import { Calendar, Clock, Target, CheckCircle } from 'lucide-react';
 
 interface StudyPlannerProps {
   course: Course | null;
+  initialPlan?: Enrollment; // Allow passing existing enrollment to pre-fill data
   onClose: () => void;
   onSave: (courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }) => void;
 }
 
-const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) => {
+const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, initialPlan, onClose, onSave }) => {
   const [hoursPerWeek, setHoursPerWeek] = useState<number>(5);
-  // Default start date to today
+  // Default start date to today or initial plan
   const [startDate, setStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [targetDate, setTargetDate] = useState<string>('');
   const [weeksToFinish, setWeeksToFinish] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Initialize state from initialPlan if provided
+  useEffect(() => {
+    if (initialPlan) {
+        if (initialPlan.plannedHoursPerWeek) setHoursPerWeek(initialPlan.plannedHoursPerWeek);
+        if (initialPlan.startDate) setStartDate(initialPlan.startDate);
+        // Target date is recalculated based on hours/start, but we can set it initially
+        // The effect below will likely override it immediately based on logic, which is fine
+    }
+  }, [initialPlan]);
 
   useEffect(() => {
     if (course && startDate) {
@@ -53,7 +66,9 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, onClose, onSave }) 
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-in transition-colors">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white">Create Study Plan</h3>
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+             {initialPlan ? 'Update Study Plan' : 'Create Study Plan'}
+          </h3>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">✕</button>
         </div>
 

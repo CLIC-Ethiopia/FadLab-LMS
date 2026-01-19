@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -433,6 +435,7 @@ const App: React.FC = () => {
                       leaderboard={leaderboard}
                       onViewDetails={handleViewDetails}
                       onResumeLearning={handleResumeLearning}
+                      onEditGoal={handlePlanCourse} // Wire up the edit handler
                     />
                   )}
                   {currentView === 'courses' && (
@@ -589,6 +592,7 @@ const App: React.FC = () => {
         {plannerCourse && (
           <StudyPlanner 
             course={plannerCourse} 
+            initialPlan={enrollments.find(e => e.courseId === plannerCourse.id)}
             onClose={() => setPlannerCourse(null)} 
             onSave={handleSavePlan} 
           />

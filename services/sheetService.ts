@@ -600,10 +600,11 @@ export const sheetService = {
         return resultEnrollment;
     };
     
+    // FIX: Send 'hoursPerWeek' instead of 'plannedHoursPerWeek' to match Backend expectations
     return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { 
       studentId, 
       courseId, 
-      plannedHoursPerWeek: plan.hoursPerWeek, 
+      hoursPerWeek: plan.hoursPerWeek, // <-- Corrected Key
       startDate: plan.startDate, 
       targetCompletionDate: plan.targetDate 
     });

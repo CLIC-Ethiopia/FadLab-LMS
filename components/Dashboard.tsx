@@ -1,8 +1,10 @@
 
+
+
 import React from 'react';
 import { Student, Enrollment, Course } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle } from 'lucide-react';
+import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle, Edit } from 'lucide-react';
 
 interface DashboardProps {
   student: Student;
@@ -10,10 +12,11 @@ interface DashboardProps {
   courses: Course[];
   leaderboard: Student[];
   onViewDetails: (course: Course) => void;
-  onResumeLearning?: (course: Course) => void; // Added handler
+  onResumeLearning?: (course: Course) => void; 
+  onEditGoal?: (course: Course) => void; // Added handler for editing
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning }) => {
+const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning, onEditGoal }) => {
   
   // Calculate stats
   const totalProgress = enrollments.reduce((acc, curr) => acc + curr.progress, 0);
@@ -214,17 +217,15 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                 <div 
                   key={index} 
                   className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
+                  onClick={() => onViewDetails(course)}
                 >
-                  <div 
-                    onClick={() => onViewDetails(course)}
-                    className="flex items-start gap-4 mb-4"
-                  >
+                  <div className="flex items-start gap-4 mb-4 relative">
                     <img 
                       src={course.thumbnail} 
                       alt={course.title} 
                       className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-90 transition-opacity"
                     />
-                    <div>
+                    <div className="flex-1 pr-6">
                       <h4 className="font-semibold text-slate-800 dark:text-white line-clamp-1 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{course.title}</h4>
                       <div className="flex items-center gap-1.5 mt-1">
                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider
@@ -235,9 +236,20 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                          </span>
                       </div>
                     </div>
+                    {/* Edit Goal Button */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEditGoal) onEditGoal(course);
+                        }}
+                        className="absolute top-0 right-0 p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Edit Study Goal"
+                    >
+                        <Edit className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow" onClick={() => onViewDetails(course)}>
+                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow">
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                         <Clock className="w-4 h-4" />
