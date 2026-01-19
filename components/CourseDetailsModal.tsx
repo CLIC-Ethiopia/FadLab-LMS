@@ -11,17 +11,21 @@ interface CourseDetailsModalProps {
 
 const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose, onEnroll }) => {
   
-  // Dynamic content generation to ensure sections are populated
-  const learningPoints = [
-    `Comprehensive understanding of ${course.title} fundamentals`,
-    `Hands-on experience with ${course.category} tools and workflows`,
-    `Real-world problem solving methodologies used in industry`,
-    `Project-based learning culminating in a portfolio piece`
-  ];
+  // Dynamic content generation to ensure sections are populated if data is missing (fallback)
+  const learningPoints = course.learningPoints && course.learningPoints.length > 0 
+    ? course.learningPoints 
+    : [
+        `Comprehensive understanding of ${course.title} fundamentals`,
+        `Hands-on experience with ${course.category} tools and workflows`,
+        `Real-world problem solving methodologies used in industry`,
+        `Project-based learning culminating in a portfolio piece`
+      ];
 
-  const prerequisites = course.level === 'Beginner' 
-    ? ["No prior experience required", "Basic computer literacy", "A curiosity for STEAM subjects"]
-    : ["Completion of introductory modules", "Familiarity with basic terminology", "Access to a computer with internet"];
+  const prerequisites = course.prerequisites && course.prerequisites.length > 0
+    ? course.prerequisites
+    : (course.level === 'Beginner' 
+        ? ["No prior experience required", "Basic computer literacy", "A curiosity for STEAM subjects"]
+        : ["Completion of introductory modules", "Familiarity with basic terminology", "Access to a computer with internet"]);
 
   // Ensure resources array exists, or provide defaults so the section is always visible
   const displayResources = course.resources && course.resources.length > 0 ? course.resources : [
@@ -95,13 +99,22 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
                 {course.description}
               </p>
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed mt-4">
-                This comprehensive course is designed to provide you with practical skills and theoretical knowledge essential for the modern industry. 
-                You will engage in hands-on projects, collaborate with peers, and receive mentorship from industry experts at CLIC Ethiopia.
-              </p>
+              
+              {/* Optional: Show Video Link if available */}
+              {course.videoUrl && (
+                <a 
+                   href={course.videoUrl} 
+                   target="_blank" 
+                   rel="noreferrer"
+                   className="inline-flex items-center gap-2 mt-3 text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                >
+                   <Video className="w-4 h-4" />
+                   Watch Introduction Video
+                </a>
+              )}
             </div>
             
-            {/* What you'll learn (Enhanced) */}
+            {/* What you'll learn */}
             <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                 <h4 className="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                   <Tag className="w-5 h-5 text-blue-500" />
@@ -117,45 +130,56 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
                 </ul>
             </div>
 
-            {/* NEW SECTION: Course Curriculum / Structure */}
+            {/* Course Curriculum / Structure */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                  <Layers className="w-5 h-5 text-indigo-500" />
                  Course Curriculum
               </h3>
               <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">1</span>
-                       <span className="font-medium text-slate-700 dark:text-slate-200">Introduction & Foundations</span>
-                    </div>
-                    <span className="text-xs text-slate-400">1h 30m</span>
-                 </div>
-                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">2</span>
-                       <span className="font-medium text-slate-700 dark:text-slate-200">Core Concepts & Theory</span>
-                    </div>
-                    <span className="text-xs text-slate-400">2h 15m</span>
-                 </div>
-                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">3</span>
-                       <span className="font-medium text-slate-700 dark:text-slate-200">Applied Lab & Practical</span>
-                    </div>
-                    <span className="text-xs text-slate-400">3h 00m</span>
-                 </div>
-                 <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">4</span>
-                       <span className="font-medium text-slate-700 dark:text-slate-200">Final Assessment</span>
-                    </div>
-                    <span className="text-xs text-slate-400">45m</span>
-                 </div>
+                 {course.curriculum && course.curriculum.length > 0 ? (
+                    course.curriculum.map((mod, idx) => (
+                        <div key={idx} className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                               <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">{idx + 1}</span>
+                               <div>
+                                  <span className="block font-medium text-slate-700 dark:text-slate-200">{mod.title}</span>
+                                  {mod.content && <span className="text-xs text-slate-500 block mt-0.5">{mod.content}</span>}
+                               </div>
+                            </div>
+                            <span className="text-xs text-slate-400 whitespace-nowrap ml-2">{mod.duration}</span>
+                        </div>
+                    ))
+                 ) : (
+                    // Fallback Curriculum if none provided
+                    <>
+                       <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">1</span>
+                             <span className="font-medium text-slate-700 dark:text-slate-200">Introduction & Foundations</span>
+                          </div>
+                          <span className="text-xs text-slate-400">1h 30m</span>
+                       </div>
+                       <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">2</span>
+                             <span className="font-medium text-slate-700 dark:text-slate-200">Core Concepts & Theory</span>
+                          </div>
+                          <span className="text-xs text-slate-400">2h 15m</span>
+                       </div>
+                       <div className="p-4 bg-white dark:bg-slate-900 flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                             <span className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold">3</span>
+                             <span className="font-medium text-slate-700 dark:text-slate-200">Final Assessment</span>
+                          </div>
+                          <span className="text-xs text-slate-400">45m</span>
+                       </div>
+                    </>
+                 )}
               </div>
             </div>
 
-            {/* NEW SECTION: Prerequisites */}
+            {/* Prerequisites */}
             <div>
                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                  <List className="w-5 h-5 text-orange-500" />
@@ -168,7 +192,7 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
                </ul>
             </div>
 
-            {/* Supplementary Materials (Always show, use defaults if missing) */}
+            {/* Supplementary Materials */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-purple-500" />
@@ -198,7 +222,7 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
               </div>
             </div>
 
-            {/* NEW SECTION: Certification Info */}
+            {/* Certification Info */}
             <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10 border border-orange-100 dark:border-orange-900/30">
                <div className="p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm">
                   <GraduationCap className="w-6 h-6 text-orange-500" />

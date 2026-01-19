@@ -1,5 +1,4 @@
 
-
 export enum CourseCategory {
   Science = 'Science',
   Technology = 'Technology',
@@ -16,6 +15,12 @@ export interface Resource {
   type: 'video' | 'document' | 'link';
 }
 
+export interface CourseModule {
+  title: string;
+  duration: string;
+  content: string;
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -25,13 +30,17 @@ export interface Course {
   instructor: string;
   thumbnail: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
+  videoUrl?: string; // New: Intro video
   resources?: Resource[];
+  learningPoints?: string[]; // New: What you'll learn
+  prerequisites?: string[]; // New: Requirements
+  curriculum?: CourseModule[]; // New: Modules list
 }
 
 export interface StudyPlan {
   courseId: string;
   plannedHoursPerWeek: number;
-  startDate: string; // Added start date
+  startDate: string; 
   targetCompletionDate: string;
 }
 
@@ -40,10 +49,10 @@ export interface Student {
   name: string;
   email: string;
   avatar: string;
-  role: 'student' | 'admin'; // Added role
-  enrolledCourses: string[]; // Array of Course IDs
+  role: 'student' | 'admin';
+  enrolledCourses: string[]; 
   studyPlans?: StudyPlan[];
-  projectIds?: string[]; // Added: Array of Project IDs authored by student
+  projectIds?: string[];
   points: number;
   rank: number;
 }
@@ -51,7 +60,7 @@ export interface Student {
 export interface Enrollment {
   studentId: string;
   courseId: string;
-  progress: number; // 0 to 100
+  progress: number;
   plannedHoursPerWeek: number;
   startDate: string;
   targetCompletionDate: string;
@@ -84,7 +93,7 @@ export interface ChatMessage {
 export interface SocialPost {
   id: string;
   source: 'CLIC Ethiopia' | 'FadLab';
-  sourceUrl: string; // URL to the FB page
+  sourceUrl: string;
   authorAvatar: string;
   content: string;
   image?: string;
@@ -119,7 +128,7 @@ export type LabType = 'Fabrication' | 'Digital' | 'Field' | 'Business';
 export interface Consumable {
   name: string;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  unit: string; // e.g., "Spools", "Sheets"
+  unit: string;
 }
 
 export interface Lab {
@@ -127,10 +136,10 @@ export interface Lab {
   name: string;
   type: LabType;
   description: string;
-  icon: string; // Lucide icon name or image url
+  icon: string;
   capacity: number;
   location: string;
-  consumables?: Consumable[]; // New: Track materials
+  consumables?: Consumable[];
 }
 
 export interface Asset {
@@ -138,9 +147,9 @@ export interface Asset {
   labId: string;
   name: string;
   model: string;
-  subCategory: string; // New: e.g., "Printer", "Sensor", "Software"
+  subCategory: string;
   status: 'Available' | 'In Use' | 'Maintenance';
-  certificationRequired?: string; // Course ID required to use this
+  certificationRequired?: string;
   image: string;
   specs?: string[];
 }
@@ -149,8 +158,8 @@ export interface Booking {
   id: string;
   assetId: string;
   studentId: string;
-  date: string; // YYYY-MM-DD
-  startTime: string; // HH:00
+  date: string;
+  startTime: string;
   durationHours: number;
   purpose: string;
 }

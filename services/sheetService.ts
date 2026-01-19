@@ -1,5 +1,4 @@
 
-
 import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Project, Lab, Asset, Booking, DigitalAsset } from '../types';
 
 /**
@@ -29,6 +28,22 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Prof. Frehun Adefris',
     thumbnail: 'https://picsum.photos/400/225?random=1',
     level: 'Beginner',
+    videoUrl: 'https://www.youtube.com/watch?v=nKIu9yen5nc',
+    learningPoints: [
+      'Understand the interdisciplinary nature of STEAM',
+      'Apply scientific methods to daily problem solving',
+      'Design thinking basics',
+      'Introduction to local innovation contexts'
+    ],
+    prerequisites: [
+      'No prior experience required',
+      'Curiosity about how things work'
+    ],
+    curriculum: [
+      { title: 'The S in STEAM', duration: '2h', content: 'Exploring the natural world through observation.' },
+      { title: 'Technology & Tools', duration: '3h', content: 'Digital literacy basics.' },
+      { title: 'Engineering Design Process', duration: '4h', content: 'From idea to prototype.' }
+    ],
     resources: [
       { title: 'STEAM Education Framework PDF', url: '/docs/steam_framework.pdf', type: 'document' },
       { title: 'Introductory Lecture Video', url: '#', type: 'video' },
@@ -44,6 +59,20 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Dr. Abyot Redahegn',
     thumbnail: 'https://picsum.photos/400/225?random=2',
     level: 'Intermediate',
+    videoUrl: '',
+    learningPoints: [
+      'Build a vertical farm system',
+      'Manage nutrient solutions',
+      'IoT sensors for agriculture'
+    ],
+    prerequisites: [
+      'Basic biology knowledge',
+      'Introduction to STEAM course recommended'
+    ],
+    curriculum: [
+       { title: 'Plant Biology Basics', duration: '5h', content: 'Understanding root systems.' },
+       { title: 'Hydroponic Systems', duration: '10h', content: 'NFT, DWC, and Aeroponics.' }
+    ],
     resources: [
       { title: 'Hydroponic Systems Diagram', url: '/images/hydro_diagram.png', type: 'document' },
       { title: 'Nutrient Solution Guide', url: '#', type: 'link' }

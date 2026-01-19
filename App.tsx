@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
@@ -15,6 +13,7 @@ import SteamIE from './components/SteamIE';
 import SocialHub from './components/SocialHub';
 import InnoLab from './components/InnoLab';
 import LabManager from './components/LabManager';
+import AdminLoginModal from './components/AdminLoginModal'; // NEW
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
 import { LayoutDashboard, BookOpen, Settings, LogOut, Loader2, Moon, Sun, User, Upload, ShieldCheck, RefreshCw, Lightbulb, Users, FlaskConical, Wrench } from 'lucide-react';
@@ -31,6 +30,7 @@ const App: React.FC = () => {
   const [plannerCourse, setPlannerCourse] = useState<Course | null>(null);
   const [detailsCourse, setDetailsCourse] = useState<Course | null>(null);
   const [progressCourse, setProgressCourse] = useState<Course | null>(null);
+  const [showAdminLogin, setShowAdminLogin] = useState(false); // NEW
   
   const [loading, setLoading] = useState(false);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
@@ -131,36 +131,25 @@ const App: React.FC = () => {
     await sheetService.enrollStudent(auth.user.id, courseId, plan);
     
     // Refresh Data
-    // 1. Refresh Enrollments (Progress)
     const newEnrollments = await sheetService.getStudentEnrollments(auth.user.id);
     setEnrollments(newEnrollments);
-
-    // 2. Refresh User Profile (Study Plans) - This ensures Dashboard 'My Study Goals' updates immediately
     const updatedUser = await sheetService.getStudentProfile(auth.user.email);
     if (updatedUser) {
-        // We spread the user object to create a new reference, triggering React re-render
         setAuth(prev => ({ ...prev, user: { ...updatedUser } }));
     }
 
-    setCurrentView('dashboard'); // Redirect to dashboard to show progress
+    setCurrentView('dashboard'); 
   };
   
   const handleUpdateProgress = async (courseId: string, progress: number) => {
     if (!auth.user) return;
-    
-    // OPTIMISTIC UPDATE: Update state immediately so UI is snappy and data isn't lost.
-    // We merge the new progress into the existing enrollment object rather than replacing it
-    // because the backend might return a partial response (e.g., just status) which would 
-    // corrupt the state if swapped directly.
     setEnrollments(prev => prev.map(e => 
       e.courseId === courseId ? { ...e, progress } : e
     ));
-
     try {
       await sheetService.updateProgress(auth.user.id, courseId, progress);
     } catch (e) {
       console.error("Failed to update progress", e);
-      // Optional: Rollback state here if needed
     }
   };
 
@@ -173,7 +162,7 @@ const App: React.FC = () => {
         ...prev,
         user: prev.user ? { ...prev.user, avatar: newUrl } : null
       }));
-      setCustomAvatarUrl(''); // Reset input
+      setCustomAvatarUrl(''); 
     } catch (e) {
       console.error("Failed to update avatar", e);
     } finally {
@@ -181,23 +170,28 @@ const App: React.FC = () => {
     }
   };
 
-  // Demo functionality to toggle role, mainly for testing
-  const handleSwitchRole = async () => {
+  // Logic to switch role (Admin Login or Back to Student)
+  const handleSwitchRoleClick = () => {
     if (!auth.user) return;
-    const newRole = auth.user.role === 'admin' ? 'student' : 'admin';
-    const updatedUser: Student = { ...auth.user, role: newRole };
     
-    setAuth({ ...auth, user: updatedUser });
-    if (newRole === 'admin') {
-        setCurrentView('admin');
-        setLoading(true);
-        // Fetch admin stats explicitly when switching to admin
-        const stats = await sheetService.getAdminStats();
-        setAdminStats(stats);
-        setLoading(false);
+    if (auth.user.role === 'admin') {
+      // If currently admin, switch back to student view (or logout - for demo we just switch views/roles)
+      const studentUser: Student = { ...auth.user, role: 'student' };
+      setAuth({ ...auth, user: studentUser });
+      setCurrentView('dashboard');
     } else {
-        setCurrentView('dashboard');
+      // If student, open admin login modal
+      setShowAdminLogin(true);
     }
+  };
+
+  const handleAdminLoginSuccess = async (adminUser: Student) => {
+      setAuth({ ...auth, user: adminUser });
+      setCurrentView('admin');
+      setLoading(true);
+      const stats = await sheetService.getAdminStats();
+      setAdminStats(stats);
+      setLoading(false);
   };
 
   // Admin Actions
@@ -232,6 +226,17 @@ const App: React.FC = () => {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Explicit refresh handler for Admin Dashboard
+  const handleRefreshStats = async () => {
+    if (auth.user?.role !== 'admin') return;
+    try {
+      const stats = await sheetService.getAdminStats();
+      setAdminStats(stats);
+    } catch (e) {
+      console.error("Failed to refresh stats", e);
     }
   };
 
@@ -365,11 +370,15 @@ const App: React.FC = () => {
 
           <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
              <button 
-              onClick={handleSwitchRole}
-              className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-400 hover:text-blue-500 transition-colors uppercase tracking-wider"
+              onClick={handleSwitchRoleClick}
+              className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold transition-colors uppercase tracking-wider rounded-lg
+                  ${auth.user.role === 'admin' 
+                    ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' 
+                    : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`
+              }
             >
               <RefreshCw className="w-4 h-4" />
-              Switch Role (Demo)
+              {auth.user.role === 'admin' ? 'Exit Admin Mode' : 'Switch Role'}
             </button>
 
             <button 
@@ -435,7 +444,7 @@ const App: React.FC = () => {
                       leaderboard={leaderboard}
                       onViewDetails={handleViewDetails}
                       onResumeLearning={handleResumeLearning}
-                      onEditGoal={handlePlanCourse} // Wire up the edit handler
+                      onEditGoal={handlePlanCourse} 
                     />
                   )}
                   {currentView === 'courses' && (
@@ -463,6 +472,7 @@ const App: React.FC = () => {
                       courses={courses}
                       onAddCourse={handleAddCourse}
                       onDeleteCourse={handleDeleteCourse}
+                      onRefreshStats={handleRefreshStats}
                       isLoading={loading}
                     />
                   )}
@@ -580,6 +590,14 @@ const App: React.FC = () => {
             leaderboard={leaderboard}
           />
         </main>
+
+        {/* ADMIN LOGIN MODAL */}
+        {showAdminLogin && (
+          <AdminLoginModal 
+            onClose={() => setShowAdminLogin(false)} 
+            onLogin={handleAdminLoginSuccess} 
+          />
+        )}
 
         {detailsCourse && (
           <CourseDetailsModal 
