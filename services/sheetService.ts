@@ -1,4 +1,5 @@
 
+
 import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Project, Lab, Asset, Booking, DigitalAsset } from '../types';
 
 /**
@@ -538,7 +539,14 @@ export const sheetService = {
         await delay(600);
         return MOCK_ENROLLMENTS.filter(e => e.studentId === studentId);
     };
-    return fetchWithFallback<Enrollment[]>('getStudentEnrollments', fallback, 'GET', { studentId });
+    // Fetch data and map it defensively to ensure properties exist
+    const data = await fetchWithFallback<any[]>('getStudentEnrollments', fallback, 'GET', { studentId });
+    return data.map(e => ({
+      ...e,
+      // Map 'hoursPerWeek' (backend) to 'plannedHoursPerWeek' (frontend) if missing
+      plannedHoursPerWeek: e.plannedHoursPerWeek ?? e.hoursPerWeek ?? 0,
+      targetCompletionDate: e.targetCompletionDate || e.targetDate || ''
+    }));
   },
 
   async enrollStudent(studentId: string, courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }): Promise<Enrollment> {

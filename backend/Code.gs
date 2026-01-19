@@ -88,7 +88,8 @@ function doGet(e) {
           .filter(en => en.studentId === sId)
           .map(en => ({
              ...en,
-             targetCompletionDate: en.targetDate // Map backend 'targetDate' to frontend 'targetCompletionDate' if needed, but keeping consistent is better
+             plannedHoursPerWeek: en.hoursPerWeek, // Map backend 'hoursPerWeek' to frontend 'plannedHoursPerWeek'
+             targetCompletionDate: en.targetDate 
           }));
         break;
 
