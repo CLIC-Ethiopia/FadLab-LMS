@@ -142,6 +142,20 @@ const App: React.FC = () => {
 
     setCurrentView('dashboard'); // Redirect to dashboard to show progress
   };
+  
+  const handleUpdateProgress = async (courseId: string, progress: number) => {
+    if (!auth.user) return;
+    
+    try {
+      const updatedEnrollment = await sheetService.updateProgress(auth.user.id, courseId, progress);
+      if (updatedEnrollment) {
+        // Update local state immediately
+        setEnrollments(prev => prev.map(e => e.courseId === courseId ? updatedEnrollment : e));
+      }
+    } catch (e) {
+      console.error("Failed to update progress", e);
+    }
+  };
 
   const handleAvatarUpdate = async (newUrl: string) => {
     if (!auth.user) return;
@@ -587,6 +601,7 @@ const App: React.FC = () => {
                 targetCompletionDate: ''
              }}
              onClose={() => setProgressCourse(null)}
+             onUpdateProgress={handleUpdateProgress}
           />
         )}
       </div>

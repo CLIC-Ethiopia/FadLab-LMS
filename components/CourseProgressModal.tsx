@@ -1,15 +1,15 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Course, Enrollment } from '../types';
-import { X, CheckCircle, PlayCircle, Lock, BookOpen, Clock, ChevronRight, ChevronDown } from 'lucide-react';
+import { X, CheckCircle, PlayCircle, Lock, BookOpen, Clock, ChevronRight, ChevronDown, CheckSquare } from 'lucide-react';
 
 interface CourseProgressModalProps {
   course: Course;
   enrollment: Enrollment;
   onClose: () => void;
+  onUpdateProgress?: (courseId: string, progress: number) => void;
 }
 
-const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrollment, onClose }) => {
+const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrollment, onClose, onUpdateProgress }) => {
   // Simulate modules based on course data (since backend doesn't have modules yet)
   const totalModules = 5;
   const completedModules = Math.floor((enrollment.progress / 100) * totalModules);
@@ -17,6 +17,18 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
   // State to track which module is expanded
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
   
+  // Refs for scrolling
+  const moduleRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Effect to scroll to the expanded module
+  useEffect(() => {
+    if (expandedModule !== null && moduleRefs.current[expandedModule]) {
+      setTimeout(() => {
+        moduleRefs.current[expandedModule]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300); // Slight delay for animation
+    }
+  }, [expandedModule]);
+
   const generateModules = () => {
     return Array.from({ length: totalModules }).map((_, index) => {
       const isCompleted = index < completedModules;
@@ -70,6 +82,25 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
     setExpandedModule(expandedModule === index ? null : index);
   };
 
+  const handleContinueLearning = () => {
+    if (completedModules < totalModules) {
+      setExpandedModule(completedModules);
+    }
+  };
+
+  const handleMarkComplete = (index: number) => {
+    if (onUpdateProgress) {
+      // Calculate new progress percentage
+      // For 5 modules: Mod 1 done = 20%, Mod 2 done = 40%, etc.
+      const newProgress = Math.min(100, Math.round(((index + 1) / totalModules) * 100));
+      onUpdateProgress(course.id, newProgress);
+      // Auto expand next module logic will happen naturally as user re-clicks continue or manually navigates
+      // But we can close the current one to signify completion or keep it open.
+      // Let's toggle it closed to show state change
+      setExpandedModule(null);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh]">
@@ -117,9 +148,10 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
                  Course Curriculum
               </h4>
               
-              {modules.map((mod) => (
+              {modules.map((mod, i) => (
                  <div 
                     key={mod.index}
+                    ref={(el) => { moduleRefs.current[i] = el; }}
                     onClick={() => handleModuleClick(mod.index)}
                     className={`relative rounded-xl border transition-all duration-300 overflow-hidden cursor-pointer
                        ${mod.isCurrent 
@@ -172,13 +204,13 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
                     </div>
 
                     {/* Expanded Content */}
-                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${expandedModule === mod.index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className={`overflow-hidden transition-all duration-500 ease-in-out ${expandedModule === mod.index ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                        <div className="p-4 pt-0 border-t border-slate-100 dark:border-slate-800/50">
                           <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 mt-4 leading-relaxed">
                             {mod.description}
                           </p>
                           
-                          <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black aspect-video group">
+                          <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black aspect-video group mb-4">
                              {mod.isLocked && !mod.isCompleted && !mod.isCurrent ? (
                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 z-10">
                                   <div className="text-center">
@@ -199,6 +231,20 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
                                 ></iframe>
                              )}
                           </div>
+                          
+                          {/* Complete Button */}
+                          {mod.isCurrent && !mod.isCompleted && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkComplete(mod.index);
+                                }}
+                                className="w-full py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <CheckSquare className="w-4 h-4" />
+                                Mark as Completed
+                            </button>
+                          )}
                        </div>
                     </div>
                  </div>
@@ -215,16 +261,23 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
              Close
            </button>
            <button 
-              onClick={() => {
-                // If there is a current module, expand it
-                if (completedModules < totalModules) {
-                   setExpandedModule(completedModules);
-                }
-              }}
-              className="px-6 py-2.5 bg-slate-900 dark:bg-blue-600 text-white font-bold rounded-xl hover:bg-slate-800 dark:hover:bg-blue-500 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              onClick={handleContinueLearning}
+              disabled={completedModules >= totalModules}
+              className={`px-6 py-2.5 bg-slate-900 dark:bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2
+                ${completedModules >= totalModules ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800 dark:hover:bg-blue-500'}
+              `}
            >
-             <PlayCircle className="w-5 h-5" />
-             Continue Learning
+             {completedModules >= totalModules ? (
+                 <>
+                    <CheckCircle className="w-5 h-5" />
+                    Course Completed
+                 </>
+             ) : (
+                 <>
+                    <PlayCircle className="w-5 h-5" />
+                    Continue Learning
+                 </>
+             )}
            </button>
         </div>
       </div>

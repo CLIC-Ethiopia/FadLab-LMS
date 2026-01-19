@@ -601,6 +601,25 @@ export const sheetService = {
     });
   },
 
+  async updateProgress(studentId: string, courseId: string, progress: number): Promise<Enrollment | null> {
+    const fallback = async () => {
+      await delay(500);
+      const index = MOCK_ENROLLMENTS.findIndex(e => e.studentId === studentId && e.courseId === courseId);
+      if (index !== -1) {
+        // Clamp progress to 100
+        const newProgress = Math.min(Math.max(progress, 0), 100);
+        MOCK_ENROLLMENTS[index] = {
+          ...MOCK_ENROLLMENTS[index],
+          progress: newProgress
+        };
+        saveToStorage('fadlab_enrollments', MOCK_ENROLLMENTS);
+        return MOCK_ENROLLMENTS[index];
+      }
+      return null;
+    };
+    return fetchWithFallback<Enrollment | null>('updateProgress', fallback, 'POST', { studentId, courseId, progress });
+  },
+
   async getLeaderboard(): Promise<Student[]> {
     const fallback = async () => {
         await delay(500);
