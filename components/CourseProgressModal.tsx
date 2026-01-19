@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Course, Enrollment } from '../types';
-import { X, CheckCircle, PlayCircle, Lock, BookOpen, Clock, ChevronRight, ChevronDown, CheckSquare } from 'lucide-react';
+import { X, CheckCircle, PlayCircle, Lock, BookOpen, Clock, ChevronRight, ChevronDown, CheckSquare, Loader2 } from 'lucide-react';
 
 interface CourseProgressModalProps {
   course: Course;
   enrollment: Enrollment;
   onClose: () => void;
-  onUpdateProgress?: (courseId: string, progress: number) => void;
+  onUpdateProgress?: (courseId: string, progress: number) => Promise<void>; // Updated type to allow async
 }
 
 const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrollment, onClose, onUpdateProgress }) => {
@@ -16,6 +16,7 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
   
   // State to track which module is expanded
   const [expandedModule, setExpandedModule] = useState<number | null>(null);
+  const [updating, setUpdating] = useState(false);
   
   // Refs for scrolling
   const moduleRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -88,16 +89,22 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
     }
   };
 
-  const handleMarkComplete = (index: number) => {
-    if (onUpdateProgress) {
+  const handleMarkComplete = async (index: number) => {
+    if (onUpdateProgress && !updating) {
+      setUpdating(true);
       // Calculate new progress percentage
       // For 5 modules: Mod 1 done = 20%, Mod 2 done = 40%, etc.
       const newProgress = Math.min(100, Math.round(((index + 1) / totalModules) * 100));
-      onUpdateProgress(course.id, newProgress);
-      // Auto expand next module logic will happen naturally as user re-clicks continue or manually navigates
-      // But we can close the current one to signify completion or keep it open.
-      // Let's toggle it closed to show state change
-      setExpandedModule(null);
+      
+      try {
+        await onUpdateProgress(course.id, newProgress);
+        // Auto close after success
+        setExpandedModule(null);
+      } catch (e) {
+        console.error("Failed to update", e);
+      } finally {
+        setUpdating(false);
+      }
     }
   };
 
@@ -235,14 +242,15 @@ const CourseProgressModal: React.FC<CourseProgressModalProps> = ({ course, enrol
                           {/* Complete Button */}
                           {mod.isCurrent && !mod.isCompleted && (
                             <button 
+                                disabled={updating}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleMarkComplete(mod.index);
                                 }}
-                                className="w-full py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                                className={`w-full py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 ${updating ? 'opacity-75 cursor-not-allowed' : ''}`}
                             >
-                                <CheckSquare className="w-4 h-4" />
-                                Mark as Completed
+                                {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckSquare className="w-4 h-4" />}
+                                {updating ? 'Updating...' : 'Mark as Completed'}
                             </button>
                           )}
                        </div>
