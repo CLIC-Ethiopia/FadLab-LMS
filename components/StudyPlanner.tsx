@@ -90,13 +90,19 @@ const StudyPlanner: React.FC<StudyPlannerProps> = ({ course, initialPlan, onClos
                 1. When do you want to start?
               </label>
               <div className="relative">
-                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                  <input 
                    type="date" 
                    value={startDate}
                    onChange={(e) => setStartDate(e.target.value)}
-                   className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   onClick={(e) => {
+                     // Try to open the picker on click anywhere in the input
+                     if('showPicker' in e.currentTarget) {
+                        try { (e.currentTarget as any).showPicker(); } catch(err) {}
+                     }
+                   }}
+                   className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:[color-scheme:dark] cursor-pointer"
                  />
+                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               </div>
             </div>
 
