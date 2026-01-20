@@ -800,6 +800,18 @@ export const sheetService = {
     return fetchWithFallback<Project>('addProject', fallback, 'POST', project);
   },
 
+  async likeProject(projectId: string): Promise<void> {
+    const fallback = async () => {
+      await delay(400);
+      const project = MOCK_PROJECTS.find(p => p.id === projectId);
+      if (project) {
+        project.likes += 1;
+        saveToStorage('fadlab_projects', MOCK_PROJECTS);
+      }
+    };
+    return fetchWithFallback<void>('likeProject', fallback, 'POST', { projectId });
+  },
+
   async getLabs(): Promise<Lab[]> {
     const fallback = async () => {
         await delay(400);

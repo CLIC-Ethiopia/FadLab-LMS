@@ -1,3 +1,4 @@
+
 /* =========================================
    FADLAB API BACKEND (Google Apps Script) - ROBUST VERSION
    ========================================= */
@@ -10,7 +11,8 @@ function setupFullDatabase() {
     "Students": ["name", "id", "email", "city", "country", "avatar", "role", "points", "rank", "joinedDate"],
     "Courses": ["id", "title", "category", "level", "instructor", "durationHours", "description", "thumbnail", "videoUrl", "resources", "learningPoints", "prerequisites", "curriculum"],
     "Enrollments": ["enrollmentId", "studentId", "courseId", "progress", "startDate", "targetDate", "hoursPerWeek"],
-    "Projects": ["id", "title", "description", "authorId", "authorName", "authorAvatar", "category", "status", "thumbnail", "likes", "tags", "githubUrl", "demoUrl", "timestamp"],
+    // UPDATED: Added blogUrl and docsUrl to schema
+    "Projects": ["id", "title", "description", "authorId", "authorName", "authorAvatar", "category", "status", "thumbnail", "likes", "tags", "githubUrl", "demoUrl", "blogUrl", "docsUrl", "timestamp"],
     "SocialPosts": ["id", "source", "sourceUrl", "authorAvatar", "content", "image", "likes", "comments", "shares", "timestamp", "tags"],
     "Labs": ["id", "name", "type", "description", "icon", "capacity", "location", "consumables"],
     "Assets": ["id", "labId", "name", "model", "subCategory", "status", "certificationRequired", "image", "specs"],
@@ -259,13 +261,46 @@ function doPost(e) {
       case 'addProject':
         const pSheet = ss.getSheetByName('Projects');
         const newPId = 'p' + new Date().getTime();
+        // UPDATED: Include blogUrl and docsUrl in row data
         pSheet.appendRow([
-           newPId, data.title, data.description, data.authorId, data.authorName, data.authorAvatar,
-           data.category, data.status, data.thumbnail, 0, 
-           data.tags.join(','), data.githubUrl, data.demoUrl, new Date().toISOString().split('T')[0]
+           newPId, 
+           data.title, 
+           data.description, 
+           data.authorId, 
+           data.authorName, 
+           data.authorAvatar,
+           data.category, 
+           data.status, 
+           data.thumbnail, 
+           0, 
+           Array.isArray(data.tags) ? data.tags.join(',') : data.tags, 
+           data.githubUrl || '', 
+           data.demoUrl || '', 
+           data.blogUrl || '', 
+           data.docsUrl || '', 
+           new Date().toISOString().split('T')[0]
         ]);
         updateStudentPoints(ss, data.authorId, 50);
         result = { status: 'success', id: newPId };
+        break;
+        
+      case 'likeProject':
+        const projSheet = ss.getSheetByName('Projects');
+        const projData = projSheet.getDataRange().getValues();
+        const headers = projData[0];
+        const idIdx = headers.indexOf('id');
+        const likesIdx = headers.indexOf('likes');
+        
+        let found = false;
+        for (let i = 1; i < projData.length; i++) {
+           if (projData[i][idIdx] == data.projectId) {
+              const currentLikes = Number(projData[i][likesIdx]) || 0;
+              projSheet.getRange(i + 1, likesIdx + 1).setValue(currentLikes + 1);
+              found = true;
+              break;
+           }
+        }
+        result = { status: found ? 'liked' : 'not_found' };
         break;
         
       case 'createBooking':

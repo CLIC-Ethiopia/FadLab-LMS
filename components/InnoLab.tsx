@@ -66,6 +66,23 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
     }
   };
 
+  const handleLike = async (project: Project) => {
+    // Optimistic UI Update
+    setProjects(prev => prev.map(p => 
+      p.id === project.id ? { ...p, likes: p.likes + 1 } : p
+    ));
+
+    try {
+      await sheetService.likeProject(project.id);
+    } catch (error) {
+      console.error("Failed to like project", error);
+      // Revert if failed
+      setProjects(prev => prev.map(p => 
+        p.id === project.id ? { ...p, likes: p.likes - 1 } : p
+      ));
+    }
+  };
+
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Header Banner */}
@@ -140,6 +157,7 @@ const InnoLab: React.FC<InnoLabProps> = ({ user }) => {
               project={project} 
               onRead={handleRead}
               onShare={handleShare}
+              onLike={handleLike}
             />
           ))}
           

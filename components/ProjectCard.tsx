@@ -1,15 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Project, CourseCategory } from '../types';
-import { Heart, BookOpen, Share2, Tag } from 'lucide-react';
+import { Heart, BookOpen, Share2, Tag, Loader2 } from 'lucide-react';
 
 interface ProjectCardProps {
   project: Project;
   onRead?: (project: Project) => void;
   onShare?: (project: Project) => void;
+  onLike?: (project: Project) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onRead, onShare }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onRead, onShare, onLike }) => {
+  const [isLiking, setIsLiking] = useState(false);
+
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onLike && !isLiking) {
+      setIsLiking(true);
+      onLike(project);
+      // Reset loading state after a short delay to prevent spamming
+      setTimeout(() => setIsLiking(false), 1000);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
       {/* Thumbnail Area */}
@@ -81,10 +94,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onRead, onShare }) =
                  />
                  <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{project.authorName}</span>
               </div>
-              <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
-                 <Heart className="w-3.5 h-3.5 fill-current" />
-                 {project.likes}
-              </div>
+              
+              {/* Like Button */}
+              <button 
+                onClick={handleLikeClick}
+                disabled={isLiking}
+                className="flex items-center gap-1 text-xs text-slate-400 hover:text-rose-500 font-medium transition-colors group/like"
+              >
+                 {isLiking ? (
+                   <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                 ) : (
+                   <Heart className={`w-3.5 h-3.5 group-hover/like:fill-rose-500 group-hover/like:scale-110 transition-transform ${project.likes > 0 ? 'text-rose-500 fill-rose-500' : ''}`} />
+                 )}
+                 <span className={`${project.likes > 0 ? 'text-rose-500' : ''}`}>{project.likes}</span>
+              </button>
            </div>
            
            {/* Buttons: Read & Share */}
