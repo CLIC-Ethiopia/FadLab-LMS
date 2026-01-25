@@ -17,7 +17,6 @@ import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, Play
 import RadarChartWidget from './RadarChartWidget';
 import PipelineProgress from './PipelineProgress';
 
-// Define the interface for Dashboard props to fix the "Cannot find name 'DashboardProps'" error.
 interface DashboardProps {
   student: Student;
   enrollments: Enrollment[];
@@ -70,6 +69,7 @@ const CustomProgressBarLabel = (props: any) => {
   return (
     <g>
       <defs>
+        {/* Fixed: Removed duplicate x2 attribute and correctly used y2 for vertical orientation */}
         <linearGradient id="circleGradient" x1="0" y1="0" x2="0" y2="1">
            <stop offset="0%" stopColor="#6366f1" />
            <stop offset="100%" stopColor="#3b82f6" />
@@ -84,7 +84,6 @@ const CustomProgressBarLabel = (props: any) => {
   );
 };
 
-// Use the newly defined DashboardProps interface.
 const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning, onEditGoal }) => {
   
   const skillStats = useMemo(() => {
@@ -95,8 +94,9 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
     enrollments.forEach(enrollment => {
       const course = courses.find(c => c.id === enrollment.courseId);
       if (course) {
-        const points = (enrollment.progress / 100) * (course.durationHours * 2);
-        stats[course.category] += points;
+        const mastery = course.masteryPoints || 100;
+        const earned = (enrollment.progress / 100) * mastery;
+        stats[course.category] += earned;
       }
     });
 
@@ -109,13 +109,6 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
 
     return { radarData, rawStats: stats };
   }, [enrollments, courses]);
-
-  const masteryTitle = useMemo(() => {
-    if (student.points > 2000) return "Master Innovator";
-    if (student.points > 1000) return "Lead Engineer";
-    if (student.points > 500) return "Industrial Technician";
-    return "Campus Apprentice";
-  }, [student.points]);
 
   const avgProgress = enrollments.length > 0 
     ? Math.round(enrollments.reduce((acc, curr) => acc + curr.progress, 0) / enrollments.length) 
@@ -147,7 +140,7 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                 <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <div>
                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none mb-1">Rank Title</p>
-                   <p className="text-sm font-bold text-indigo-700 dark:text-indigo-200 leading-none">{masteryTitle}</p>
+                   <p className="text-sm font-bold text-indigo-700 dark:text-indigo-200 leading-none">{student.rankTitle || 'Campus Apprentice'}</p>
                 </div>
              </div>
              <div className="flex items-center gap-2 px-4 py-2 glass dark:glass border border-amber-100 dark:border-white/10 rounded-2xl shadow-sm">
