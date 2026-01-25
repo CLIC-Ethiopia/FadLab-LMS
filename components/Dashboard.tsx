@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Student, Enrollment, Course } from '../types';
+import React, { useMemo } from 'react';
+import { Student, Enrollment, Course, CourseCategory } from '../types';
 import { 
   BarChart, 
   Bar, 
@@ -13,7 +13,9 @@ import {
   ReferenceLine,
   LabelList
 } from 'recharts';
-import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle, Edit } from 'lucide-react';
+import { Trophy, Clock, BookOpen, TrendingUp, Target, Calendar, ArrowRight, PlayCircle, Edit, BrainCircuit, Zap, ShieldCheck, Eye, Play } from 'lucide-react';
+import RadarChartWidget from './RadarChartWidget';
+import PipelineProgress from './PipelineProgress';
 
 interface DashboardProps {
   student: Student;
@@ -25,11 +27,9 @@ interface DashboardProps {
   onEditGoal?: (course: Course) => void; 
 }
 
-// Custom Tooltip for the new chart style
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const completed = payload[0].value;
-    const remaining = 100 - completed;
     return (
       <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 animate-fade-in">
         <p className="font-bold text-slate-800 dark:text-white mb-1">{label}</p>
@@ -39,9 +39,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <span className="text-slate-600 dark:text-slate-300">Progress:</span>
             <span className="font-bold text-indigo-600 dark:text-indigo-400">{completed}%</span>
           </p>
-          <p className="text-slate-400 dark:text-slate-500 italic mt-1">
-            {remaining > 0 ? `${remaining}% left to complete` : 'Course Completed! 🎉'}
-          </p>
         </div>
       </div>
     );
@@ -49,7 +46,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Custom Background Track (The "Empty" part of the slider)
 const CustomProgressBarBackground = (props: any) => {
   const { x, y, width, height } = props;
   return (
@@ -64,36 +60,23 @@ const CustomProgressBarBackground = (props: any) => {
   );
 };
 
-// Custom Label (The Circle at the end)
 const CustomProgressBarLabel = (props: any) => {
   const { x, y, width, height, value } = props;
-  
-  // Center of the circle at the end of the progress bar
   const cx = x + width;
   const cy = y + height / 2;
-  const radius = 14; // Larger than the bar height (12) to create the pop-out effect
-
-  // If value is 0, ensure circle doesn't look weirdly placed, but logically x+width is correct
-  // Hide if width is 0? No, show 0.
+  const radius = 14;
 
   return (
     <g>
-      {/* Circle Background with Gradient */}
-      <circle cx={cx} cy={cy} r={radius} fill="url(#progressGradient)" />
-      
-      {/* Inner Border Ring for separation */}
+      <defs>
+        <linearGradient id="circleGradient" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0%" stopColor="#6366f1" />
+           <stop offset="100%" stopColor="#3b82f6" />
+        </linearGradient>
+      </defs>
+      <circle cx={cx} cy={cy} r={radius} fill="url(#circleGradient)" />
       <circle cx={cx} cy={cy} r={radius} fill="none" stroke="white" strokeWidth={2} className="dark:stroke-slate-900" />
-
-      {/* Text Value */}
-      <text 
-        x={cx} 
-        y={cy} 
-        fill="#fff" 
-        textAnchor="middle" 
-        dominantBaseline="central" 
-        fontSize="10" 
-        fontWeight="bold"
-      >
+      <text x={cx} y={cy} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="bold">
         {value}
       </text>
     </g>
@@ -102,323 +85,319 @@ const CustomProgressBarLabel = (props: any) => {
 
 const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, leaderboard, onViewDetails, onResumeLearning, onEditGoal }) => {
   
-  // Calculate stats
-  const totalProgress = enrollments.reduce((acc, curr) => acc + curr.progress, 0);
-  const avgProgress = enrollments.length > 0 ? Math.round(totalProgress / enrollments.length) : 0;
-  const inProgressCount = enrollments.filter(e => e.progress < 100).length;
-  const completedCount = enrollments.filter(e => e.progress === 100).length;
+  // Advanced Stat Calculation for Radar and Pipeline
+  const skillStats = useMemo(() => {
+    const categories = Object.values(CourseCategory);
+    const stats: Record<string, number> = {};
+    categories.forEach(cat => stats[cat] = 0);
 
-  // Prepare chart data
+    enrollments.forEach(enrollment => {
+      const course = courses.find(c => c.id === enrollment.courseId);
+      if (course) {
+        const points = (enrollment.progress / 100) * (course.durationHours * 2);
+        stats[course.category] += points;
+      }
+    });
+
+    const radarData = categories.map(cat => ({
+      category: cat.charAt(0),
+      fullName: cat,
+      value: Math.min(stats[cat], 100),
+      fullMark: 100
+    }));
+
+    return { radarData, rawStats: stats };
+  }, [enrollments, courses]);
+
+  const masteryTitle = useMemo(() => {
+    if (student.points > 2000) return "Master Innovator";
+    if (student.points > 1000) return "Lead Engineer";
+    if (student.points > 500) return "Industrial Technician";
+    return "Campus Apprentice";
+  }, [student.points]);
+
+  const avgProgress = enrollments.length > 0 
+    ? Math.round(enrollments.reduce((acc, curr) => acc + curr.progress, 0) / enrollments.length) 
+    : 0;
+
   const progressData = enrollments.map(e => {
     const course = courses.find(c => c.id === e.courseId);
     return {
       name: course ? (course.title.length > 20 ? course.title.substring(0, 20) + '...' : course.title) : 'Unknown',
       completed: e.progress,
-      fullMark: 100
     };
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white transition-colors">Welcome back, {student.name}! 👋</h2>
-          <p className="text-slate-500 dark:text-slate-400 transition-colors">Here's what's happening with your STEAM learning journey.</p>
+    <div className="space-y-8 animate-fade-in pb-12">
+      {/* Welcome & Industrial Profile Header */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{student.name}</span>! 👋
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-lg">
+              You are currently ranked <span className="font-bold text-slate-800 dark:text-slate-200">#{student.rank}</span> on the global leaderboards.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+             <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
+                <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <div>
+                   <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest leading-none mb-1">Rank Title</p>
+                   <p className="text-sm font-bold text-indigo-700 dark:text-indigo-200 leading-none">{masteryTitle}</p>
+                </div>
+             </div>
+             <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 rounded-2xl">
+                <Zap className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <div>
+                   <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest leading-none mb-1">Knowledge XP</p>
+                   <p className="text-sm font-bold text-amber-700 dark:text-amber-200 leading-none">{student.points} Points</p>
+                </div>
+             </div>
+          </div>
         </div>
-        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
-            <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider">Current Rank</p>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">#{student.rank} Leaderboard</p>
-          </div>
+
+        <div className="lg:col-span-5">
+           <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-xl transition-all hover:shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <BrainCircuit className="w-4 h-4" /> Skill Radar
+                 </h3>
+                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              </div>
+              <RadarChartWidget data={skillStats.radarData} />
+           </div>
         </div>
       </div>
+
+      <PipelineProgress stats={skillStats.rawStats} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg">
-            <BookOpen className="w-6 h-6" />
+        {[
+          { label: 'Enrolled Courses', value: enrollments.length, icon: BookOpen, color: 'blue' },
+          { label: 'In Progress', value: enrollments.filter(e => e.progress < 100).length, icon: Clock, color: 'orange' },
+          { label: 'Completed', value: enrollments.filter(e => e.progress === 100).length, icon: Trophy, color: 'green' },
+          { label: 'Avg. Progress', value: `${avgProgress}%`, icon: TrendingUp, color: 'purple' },
+        ].map((stat, i) => (
+          <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-all hover:scale-[1.02]">
+            <div className={`p-3 rounded-xl bg-${stat.color}-50 dark:bg-${stat.color}-900/20 text-${stat.color}-600 dark:text-${stat.color}-400`}>
+              <stat.icon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
+              <p className="text-2xl font-black text-slate-800 dark:text-white">{stat.value}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Enrolled Courses</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{enrollments.length}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-lg">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">In Progress</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{inProgressCount}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg">
-            <Trophy className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Completed</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{completedCount}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4 transition-colors">
-          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Avg. Progress</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-white">{avgProgress}%</p>
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Progress Chart */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 lg:col-span-2 transition-colors">
-          <div className="flex justify-between items-center mb-6">
-             <h3 className="text-lg font-bold text-slate-800 dark:text-white">Course Progress</h3>
-             <span className="text-xs font-medium px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded">
-               Benchmark: {avgProgress}%
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 lg:col-span-2 shadow-sm transition-colors">
+          <div className="flex justify-between items-center mb-8">
+             <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Active Curriculum</h3>
+                <p className="text-sm text-slate-500">Your current path through the industrial framework.</p>
+             </div>
+             <span className="text-xs font-black px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full">
+               GLOBAL AVG: {avgProgress}%
              </span>
           </div>
           
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              {/* Increased right margin to allow the circle label to overflow without clipping */}
-              <BarChart data={progressData} layout="vertical" margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
-                <defs>
-                  <linearGradient id="progressGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#3b82f6" />
-                  </linearGradient>
-                </defs>
+              <BarChart data={progressData} layout="vertical" margin={{ left: 10, right: 30, top: 10, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" className="dark:opacity-10" />
                 <XAxis type="number" domain={[0, 100]} hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={140} 
-                  tick={{ fontSize: 12, fill: '#64748b' }} 
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} cursor={{fill: 'transparent'}} />
-                
-                <Bar 
-                  dataKey="completed" 
-                  barSize={12} 
-                  radius={[6, 6, 6, 6]} // Rounded ends
-                  fill="url(#progressGradient)"
-                  background={<CustomProgressBarBackground />} // The track
-                  animationDuration={1500}
-                >
-                   {/* The circle at the end */}
+                <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(0,0,0,0.02)'}} />
+                <Bar dataKey="completed" barSize={10} radius={[5, 5, 5, 5]} fill="#6366f1" background={<CustomProgressBarBackground />} animationDuration={1000}>
                    <LabelList dataKey="completed" content={<CustomProgressBarLabel />} />
                 </Bar>
-
-                <ReferenceLine x={avgProgress} stroke="#818cf8" strokeDasharray="3 3" strokeOpacity={0.5} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Scoreboard */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Top Students</h3>
-          <div className="space-y-4">
-            {leaderboard.map((s, idx) => (
-              <div key={s.id} className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Innovation Leaderboard</h3>
+          <div className="space-y-5">
+            {leaderboard.slice(0, 5).map((s, idx) => (
+              <div key={s.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                    ${idx === 0 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-500' : 
-                      idx === 1 ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' :
-                      idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-500' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm transition-all group-hover:scale-110
+                    ${idx === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-500 ring-2 ring-amber-500/20' : 
+                      'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                     }`}>
                     {idx + 1}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{s.name}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{s.points} XP</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">{s.name}</span>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{s.points} XP</span>
                   </div>
                 </div>
-                {idx === 0 && <Trophy className="w-4 h-4 text-yellow-500" />}
+                {idx === 0 && <Trophy className="w-5 h-5 text-amber-500 animate-bounce" />}
               </div>
             ))}
           </div>
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <button className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
-              View Full Leaderboard
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+            <button className="w-full py-3 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+              View Comprehensive Rankings
             </button>
           </div>
         </div>
       </div>
 
-      {/* Study Plan Goals Section */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
-        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-          <Target className="w-5 h-5 text-indigo-500" />
-          My Study Goals
-        </h3>
+      {/* Strategic Study Map Section */}
+      <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+           <div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Target className="w-6 h-6 text-indigo-500" />
+                Strategic Study Map
+              </h3>
+              <p className="text-slate-500">Manage your industrial research milestones.</p>
+           </div>
+           <div className="h-px bg-slate-100 dark:bg-slate-800 flex-grow mx-6 hidden md:block"></div>
+        </div>
         
         {enrollments.length === 0 ? (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
-            <p>You haven't set any study goals yet.</p>
-            <p className="text-sm mt-1">Select a course and click "Plan Study" to set one up.</p>
+          <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/20 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 group">
+            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform">
+               <BookOpen className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="font-bold text-slate-600 dark:text-slate-400">No active research paths identified.</p>
+            <p className="text-sm text-slate-400 mt-2">Browse the catalog and set your first study goal.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {enrollments.map((enrollment, index) => {
               const course = courses.find(c => c.id === enrollment.courseId);
-              
               if (!course) return null;
               
-              // Date Calculations and Status Logic
-              const targetDateStr = enrollment.targetCompletionDate;
-              const startDateStr = enrollment.startDate;
-              
-              const targetDateObj = new Date(targetDateStr);
-              const startDateObj = new Date(startDateStr);
+              const targetDateObj = new Date(enrollment.targetCompletionDate);
+              const startDateObj = new Date(enrollment.startDate);
               const today = new Date();
               
-              // Validate Dates
-              const hasValidTarget = Boolean(targetDateStr) && !isNaN(targetDateObj.getTime());
-              const hasValidStart = Boolean(startDateStr) && !isNaN(startDateObj.getTime());
+              const hasValidTarget = !isNaN(targetDateObj.getTime());
+              const hasValidStart = !isNaN(startDateObj.getTime());
               
-              let statusText = "No Plan Set";
+              let statusText = "Ready to Begin";
               let statusColor = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400";
               
               if (hasValidStart && hasValidTarget) {
-                 // Check if future start
                  if (today < startDateObj) {
-                    const diffTime = Math.abs(startDateObj.getTime() - today.getTime());
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                    statusText = `Starts in ${diffDays} Days`;
+                    const diffDays = Math.ceil(Math.abs(startDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)); 
+                    statusText = `T-MINUS ${diffDays} DAYS`;
                     statusColor = "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
                  } else {
-                    // It has started. Check if overdue.
-                    const diffTime = targetDateObj.getTime() - today.getTime();
-                    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
+                    const daysLeft = Math.ceil((targetDateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                     if (daysLeft < 0) {
-                        statusText = `${Math.abs(daysLeft)} Days Overdue`;
+                        statusText = "SCHEDULE OVERDUE";
                         statusColor = "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
-                    } else if (daysLeft <= 7) {
-                        statusText = `${daysLeft} Days Remaining`;
-                        statusColor = "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300";
                     } else {
-                        statusText = `${daysLeft} Days Remaining`;
-                        statusColor = "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+                        statusText = `${daysLeft} DAYS TO DEADLINE`;
+                        statusColor = daysLeft <= 7 ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30" : "bg-green-100 text-green-700 dark:bg-green-900/30";
                     }
                  }
               }
 
               return (
-                <div 
-                  key={index} 
-                  className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col h-full"
-                  onClick={() => onViewDetails(course)}
-                >
-                  <div className="flex items-start gap-4 mb-4 relative">
-                    <img 
-                      src={course.thumbnail} 
-                      alt={course.title} 
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-90 transition-opacity"
-                    />
-                    <div className="flex-1 pr-6">
-                      <h4 className="font-semibold text-slate-800 dark:text-white line-clamp-1 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{course.title}</h4>
-                      <div className="flex items-center gap-1.5 mt-1">
-                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider
-                            ${course.category === 'Science' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 
-                              'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}
-                         `}>
-                           {course.category}
-                         </span>
-                      </div>
+                <div key={index} className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${
+                    course.category === 'Science' ? 'from-blue-500 to-indigo-600' : 
+                    course.category === 'Technology' ? 'from-indigo-500 to-purple-600' : 
+                    course.category === 'Engineering' ? 'from-orange-500 to-red-600' : 
+                    'from-slate-500 to-slate-700'
+                  }`}></div>
+                  
+                  {/* Card Header */}
+                  <div className="p-6 pb-0 flex items-start gap-4">
+                    <div className="relative flex-shrink-0">
+                       <img src={course.thumbnail} alt="" className="w-16 h-16 rounded-2xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-500" />
+                       <div className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-100 dark:border-slate-800">
+                         <ShieldCheck className="w-3 h-3 text-blue-500" />
+                       </div>
                     </div>
-                    {/* Edit Goal Button */}
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (onEditGoal) onEditGoal(course);
-                        }}
-                        className="absolute top-0 right-0 p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                        title="Edit Study Goal"
-                    >
-                        <Edit className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700 flex-grow">
-                    <div className="flex justify-between items-center text-sm">
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <Clock className="w-4 h-4" />
-                        <span>Commitment</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2">
+                        <h4 className="font-black text-slate-800 dark:text-white line-clamp-1 group-hover:line-clamp-none transition-all duration-300">
+                          {course.title}
+                        </h4>
+                        <button onClick={(e) => { e.stopPropagation(); if (onEditGoal) onEditGoal(course); }} className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-all flex-shrink-0">
+                            <Edit className="w-4 h-4" />
+                        </button>
                       </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">
-                        {enrollment.plannedHoursPerWeek ? `${enrollment.plannedHoursPerWeek} hrs/week` : 'Not set'}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <PlayCircle className="w-4 h-4" />
-                        <span>Start Date</span>
-                      </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">
-                        {hasValidStart ? startDateObj.toLocaleDateString() : 'Not set'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-sm">
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <Calendar className="w-4 h-4" />
-                        <span>Target Date</span>
-                      </div>
-                      <span className="font-medium text-slate-700 dark:text-slate-200">
-                        {hasValidTarget ? targetDateObj.toLocaleDateString() : 'Not set'}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-xs pt-1">
-                       <span className={`font-medium px-2 py-1 rounded w-full text-center ${statusColor}`}>
-                           {statusText}
-                       </span>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-1 block">{course.category} SPECIALIZATION</span>
                     </div>
                   </div>
 
-                  <div className="mt-4 space-y-2">
-                    <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                      <span>Progress</span>
-                      <span>{enrollment.progress}%</span>
+                  {/* Card Body - Synced Dates */}
+                  <div className="p-6 pt-5 space-y-4 flex-grow">
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <Calendar className="w-3 h-3" />
+                            <span>Start Date</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                            {hasValidStart ? startDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'Pending'}
+                          </p>
+                       </div>
+                       <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <Clock className="w-3 h-3" />
+                            <span>Commitment</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{enrollment.plannedHoursPerWeek} HR/WK</p>
+                       </div>
                     </div>
-                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-indigo-500 h-full rounded-full transition-all duration-500" 
-                        style={{ width: `${enrollment.progress}%` }}
-                      ></div>
+
+                    <div className="space-y-1">
+                       <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                         <Target className="w-3 h-3" />
+                         <span>Target Completion</span>
+                       </div>
+                       <div className="flex items-center justify-between">
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                             {hasValidTarget ? targetDateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+                          </p>
+                          <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${statusColor}`}>
+                            {statusText}
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* Progress Visual */}
+                    <div className="pt-2 space-y-2">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                        <span className="text-slate-400">Phase Completion</span>
+                        <span className="text-indigo-600 dark:text-indigo-400">{enrollment.progress}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(99,102,241,0.3)]" style={{ width: `${enrollment.progress}%` }}></div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Quick Action Footer - Always Visible */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between text-xs font-medium">
+                  {/* Card Footer - Always Visible Buttons */}
+                  <div className="px-6 pb-6 pt-2 grid grid-cols-2 gap-3 border-t border-slate-50 dark:border-slate-700/50 mt-auto">
                     <button 
                       onClick={(e) => { e.stopPropagation(); onViewDetails(course); }}
-                      className="flex items-center gap-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
-                      <BookOpen className="w-3 h-3" />
-                      View Details
+                      <Eye className="w-3.5 h-3.5" />
+                      DETAILS
                     </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); if(onResumeLearning) onResumeLearning(course); }}
-                      className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-slate-900 dark:bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-slate-800 dark:hover:bg-blue-500 transition-colors shadow-sm"
                     >
-                      <PlayCircle className="w-3 h-3" />
-                      Resume Learning
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      RESUME
                     </button>
                   </div>
                 </div>
