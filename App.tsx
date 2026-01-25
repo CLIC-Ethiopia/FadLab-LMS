@@ -27,10 +27,8 @@ const App: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<Student[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   
-  // Ref for the scrollable content area
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Modal States
   const [plannerCourse, setPlannerCourse] = useState<Course | null>(null);
   const [detailsCourse, setDetailsCourse] = useState<Course | null>(null);
   const [progressCourse, setProgressCourse] = useState<Course | null>(null);
@@ -39,7 +37,6 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [customAvatarUrl, setCustomAvatarUrl] = useState('');
 
-  // Theme State
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
@@ -51,14 +48,12 @@ const App: React.FC = () => {
     return false;
   });
 
-  // Scroll to top whenever currentView changes
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
   }, [currentView]);
 
-  // Apply theme to document
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -71,7 +66,6 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setDarkMode(!darkMode);
 
-  // Initialize app data after login
   const fetchData = async (user: Student) => {
     setLoading(true);
     try {
@@ -251,52 +245,58 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-200">
+      <div className="flex h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-200 relative overflow-hidden">
+        
+        {/* Decorative Blobs for Glass Effect Background */}
+        <div className="absolute top-0 -left-20 w-96 h-96 bg-blue-400/10 dark:bg-blue-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
+        <div className="absolute top-1/2 -right-20 w-96 h-96 bg-purple-400/10 dark:bg-purple-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
+        <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-indigo-400/10 dark:bg-indigo-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
+
         {/* Sidebar (Desktop Only) */}
-        <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col transition-colors duration-200">
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+        <aside className="w-64 glass dark:glass border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col transition-colors duration-200 relative z-10 shadow-2xl">
+          <div className="p-6 border-b border-slate-100 dark:border-white/10">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="FadLab Logo" className="w-8 h-8 object-contain" />
+              <img src="/logo.png" alt="FadLab Logo" className="w-8 h-8 object-contain drop-shadow-md" />
               <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">FadLab</span>
             </div>
             <div className="mt-2 flex items-center gap-2">
-                <span className={`inline-block px-2 py-0.5 text-xs font-bold rounded ${auth.user?.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
+                <span className={`inline-block px-2 py-0.5 text-xs font-bold rounded shadow-sm ${auth.user?.role === 'admin' ? 'bg-purple-100/80 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'}`}>
                     {auth.user?.role === 'admin' ? 'Administrator' : 'Student'}
                 </span>
             </div>
           </div>
 
           <nav className="flex-grow p-4 space-y-2">
-            <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'dashboard' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><LayoutDashboard className="w-5 h-5" /><span className="font-medium">Dashboard</span></button>
-            <button onClick={() => setCurrentView('courses')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'courses' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><BookOpen className="w-5 h-5" /><span className="font-medium">All Courses</span></button>
-            <button onClick={() => setCurrentView('inno-lab')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'inno-lab' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><FlaskConical className="w-5 h-5" /><span className="font-medium">Inno-Lab</span></button>
-            <button onClick={() => setCurrentView('lab-manager')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'lab-manager' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><Wrench className="w-5 h-5" /><span className="font-medium">Lab Resources</span></button>
-            <button onClick={() => setCurrentView('social')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'social' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><Users className="w-5 h-5" /><span className="font-medium">Social Hub</span></button>
-            <button onClick={() => setCurrentView('steam-ie')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'steam-ie' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><Lightbulb className="w-5 h-5" /><span className="font-medium">STEAM-IE</span></button>
+            <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'dashboard' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><LayoutDashboard className="w-5 h-5" /><span className="font-medium">Dashboard</span></button>
+            <button onClick={() => setCurrentView('courses')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'courses' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><BookOpen className="w-5 h-5" /><span className="font-medium">All Courses</span></button>
+            <button onClick={() => setCurrentView('inno-lab')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'inno-lab' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><FlaskConical className="w-5 h-5" /><span className="font-medium">Inno-Lab</span></button>
+            <button onClick={() => setCurrentView('lab-manager')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'lab-manager' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><Wrench className="w-5 h-5" /><span className="font-medium">Lab Resources</span></button>
+            <button onClick={() => setCurrentView('social')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'social' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><Users className="w-5 h-5" /><span className="font-medium">Social Hub</span></button>
+            <button onClick={() => setCurrentView('steam-ie')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'steam-ie' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><Lightbulb className="w-5 h-5" /><span className="font-medium">STEAM-IE</span></button>
 
             {auth.user?.role === 'admin' && (
-              <button onClick={() => setCurrentView('admin')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'admin' ? 'bg-purple-600 text-white shadow-md' : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}><ShieldCheck className="w-5 h-5" /><span className="font-medium">Admin Panel</span></button>
+              <button onClick={() => setCurrentView('admin')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'admin' ? 'bg-purple-600 text-white shadow-lg' : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/10'}`}><ShieldCheck className="w-5 h-5" /><span className="font-medium">Admin Panel</span></button>
             )}
 
-            <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'settings' ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'}`}><Settings className="w-5 h-5" /><span className="font-medium">Settings</span></button>
+            <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${currentView === 'settings' ? 'bg-slate-900 dark:bg-white/10 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'}`}><Settings className="w-5 h-5" /><span className="font-medium">Settings</span></button>
           </nav>
 
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div className="p-4 border-t border-slate-100 dark:border-white/10 space-y-2">
              <button onClick={handleSwitchRoleClick} className={`w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold transition-colors uppercase tracking-wider rounded-lg ${auth.user.role === 'admin' ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20'}`}><RefreshCw className="w-4 h-4" />{auth.user.role === 'admin' ? 'Exit Admin Mode' : 'Switch Role'}</button>
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><LogOut className="w-5 h-5" /><span className="font-medium">Sign Out</span></button>
           </div>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200 relative">
+        <main className="flex-1 flex flex-col h-screen overflow-hidden transition-colors duration-200 relative z-10">
           {/* Mobile Header */}
-          <header className="md:hidden bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center sticky top-0 z-40">
+          <header className="md:hidden glass dark:glass border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center sticky top-0 z-40">
             <div className="flex items-center gap-2">
               <img src="/logo.png" alt="FadLab Logo" className="w-6 h-6 object-contain" />
               <span className="font-bold text-lg text-slate-800 dark:text-slate-100">FadLab</span>
             </div>
             <div className="flex items-center gap-4">
-              <button onClick={toggleTheme} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
+              <button onClick={toggleTheme} className="p-2 glass dark:glass rounded-lg text-slate-600 dark:text-slate-300">
                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
             </div>
@@ -305,13 +305,13 @@ const App: React.FC = () => {
           {/* Content Scroll Area */}
           <div 
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8"
+            className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 relative"
           >
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto relative">
               {/* Sync Status Indicator */}
               <div className="flex justify-end mb-4">
-                 <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm">
-                   {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <div className="w-2 h-2 rounded-full bg-green-500"></div>}
+                 <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 glass dark:glass px-3 py-1 rounded-full border border-slate-100 dark:border-white/5 shadow-sm">
+                   {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>}
                    {loading ? 'Syncing...' : 'Connected'}
                  </div>
               </div>
@@ -321,7 +321,7 @@ const App: React.FC = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-slate-300 dark:text-slate-600" />
                 </div>
               ) : (
-                <>
+                <div className="relative z-20">
                   {currentView === 'dashboard' && auth.user && <Dashboard student={auth.user} enrollments={enrollments} courses={courses} leaderboard={leaderboard} onViewDetails={handleViewDetails} onResumeLearning={handleResumeLearning} onEditGoal={handlePlanCourse} />}
                   {currentView === 'courses' && <CourseList courses={courses} onSelectCourse={handlePlanCourse} onViewDetails={handleViewDetails} />}
                   {currentView === 'social' && <SocialHub />}
@@ -331,11 +331,11 @@ const App: React.FC = () => {
                   {currentView === 'admin' && auth.user?.role === 'admin' && <AdminDashboard stats={adminStats} courses={courses} onAddCourse={handleAddCourse} onDeleteCourse={handleDeleteCourse} onRefreshStats={handleRefreshStats} isLoading={loading} />}
                   {currentView === 'settings' && auth.user && (
                      <div className="max-w-3xl mx-auto space-y-6">
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+                        <div className="glass dark:glass p-8 rounded-[2.5rem] shadow-sm transition-colors">
                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><User className="w-6 h-6" />Profile Settings</h2>
                            <div className="flex flex-col items-center gap-6">
                                <div className="relative group">
-                                   <div className="w-32 h-32 rounded-full p-1 border-4 border-slate-100 dark:border-slate-800 shadow-md bg-white dark:bg-slate-800">
+                                   <div className="w-32 h-32 rounded-full p-1 border-4 border-white/50 dark:border-white/10 shadow-xl bg-white/20 backdrop-blur-xl overflow-hidden">
                                       <img src={auth.user.avatar} alt={auth.user.name} className="w-full h-full rounded-full object-cover"/>
                                    </div>
                                </div>
@@ -343,11 +343,11 @@ const App: React.FC = () => {
                                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{auth.user.name}</h3>
                                    <p className="text-slate-500 dark:text-slate-400">{auth.user.email}</p>
                                </div>
-                               <div className="w-full pt-8 border-t border-slate-100 dark:border-slate-800">
+                               <div className="w-full pt-8 border-t border-slate-100 dark:border-white/10">
                                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wider text-center">Change Avatar</h4>
                                    <div className="grid grid-cols-4 gap-4 justify-items-center mb-6 max-w-sm mx-auto">
                                       {presetAvatars.map((url, index) => (
-                                          <button key={index} onClick={() => handleAvatarUpdate(url)} className={`w-14 h-14 rounded-full overflow-hidden border-2 transition-all transform hover:scale-110 ${auth.user?.avatar === url ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-transparent hover:border-blue-400'}`}>
+                                          <button key={index} onClick={() => handleAvatarUpdate(url)} className={`w-14 h-14 rounded-full overflow-hidden border-2 transition-all transform hover:scale-110 ${auth.user?.avatar === url ? 'border-blue-500 ring-4 ring-blue-500/20' : 'border-transparent hover:border-blue-400'}`}>
                                               <img src={url} alt={`Preset ${index}`} className="w-full h-full object-cover" />
                                           </button>
                                       ))}
@@ -355,43 +355,42 @@ const App: React.FC = () => {
                                    <div className="flex gap-2 max-w-md mx-auto">
                                        <div className="relative flex-grow">
                                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Upload className="h-4 w-4 text-slate-400" /></div>
-                                          <input type="text" placeholder="Or paste an image URL..." value={customAvatarUrl} onChange={(e) => setCustomAvatarUrl(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
+                                          <input type="text" placeholder="Or paste an image URL..." value={customAvatarUrl} onChange={(e) => setCustomAvatarUrl(e.target.value)} className="w-full pl-10 pr-4 py-2 glass dark:glass border border-slate-200 dark:border-white/5 rounded-lg text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
                                        </div>
-                                       <button onClick={() => {if(customAvatarUrl) handleAvatarUpdate(customAvatarUrl);}} disabled={!customAvatarUrl} className="px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg text-sm font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Update</button>
+                                       <button onClick={() => {if(customAvatarUrl) handleAvatarUpdate(customAvatarUrl);}} disabled={!customAvatarUrl} className="px-4 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Update</button>
                                    </div>
                                </div>
                            </div>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+                        <div className="glass dark:glass p-8 rounded-[2.5rem] shadow-sm transition-colors">
                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2"><Settings className="w-6 h-6" />App Preferences</h2>
                            <div className="flex items-center justify-between">
                                <div>
                                    <p className="font-medium text-slate-800 dark:text-white">Theme Preference</p>
                                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Toggle between light and dark visual modes</p>
                                </div>
-                               <button onClick={toggleTheme} className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-800">{darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}<span className="font-medium">{darkMode ? 'Light' : 'Dark'}</span></button>
+                               <button onClick={toggleTheme} className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-white/10 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors glass dark:glass">{darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}<span className="font-medium">{darkMode ? 'Light' : 'Dark'}</span></button>
                            </div>
-                           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-white/10">
                               <button onClick={handleLogout} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium flex items-center gap-2"><LogOut className="w-4 h-4" />Sign out of account</button>
                            </div>
                         </div>
                      </div>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>
           
           <ChatBot courses={courses} user={auth.user} enrollments={enrollments} leaderboard={leaderboard} />
 
-          {/* Bottom Nav (Mobile Only) */}
           <BottomNav currentView={currentView} onViewChange={setCurrentView} />
         </main>
 
         {/* Floating Theme Toggle (Desktop Only) */}
         <button
             onClick={toggleTheme}
-            className="fixed bottom-6 left-6 z-50 p-3 rounded-full shadow-xl transition-all duration-300 hover:scale-110 hidden md:flex items-center justify-center bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+            className="fixed bottom-6 left-6 z-50 p-3 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hidden md:flex items-center justify-center glass dark:glass text-slate-600 dark:text-slate-300 border border-white/20 dark:border-white/5"
             title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
             {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
