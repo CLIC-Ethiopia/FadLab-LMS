@@ -471,6 +471,10 @@ async function fetchWithFallback<T>(
             Object.keys(payload).forEach(key => params.append(key, String(payload[key])));
             url += `&${params.toString()}`;
         } else if (method === 'POST') {
+            // FIX: Apps Script POST requests must be sent as text/plain to avoid CORS preflight (OPTIONS) check failure.
+            options.headers = {
+              'Content-Type': 'text/plain;charset=utf-8'
+            };
             options.body = JSON.stringify({ action, ...payload });
         }
 

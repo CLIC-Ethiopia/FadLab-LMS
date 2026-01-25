@@ -11,7 +11,6 @@ function setupFullDatabase() {
     "Students": ["name", "id", "email", "city", "country", "avatar", "role", "points", "rank", "joinedDate"],
     "Courses": ["id", "title", "category", "level", "instructor", "durationHours", "description", "thumbnail", "videoUrl", "resources", "learningPoints", "prerequisites", "curriculum"],
     "Enrollments": ["enrollmentId", "studentId", "courseId", "progress", "startDate", "targetDate", "hoursPerWeek"],
-    // UPDATED: Added blogUrl and docsUrl to schema
     "Projects": ["id", "title", "description", "authorId", "authorName", "authorAvatar", "category", "status", "thumbnail", "likes", "tags", "githubUrl", "demoUrl", "blogUrl", "docsUrl", "timestamp"],
     "SocialPosts": ["id", "source", "sourceUrl", "authorAvatar", "content", "image", "likes", "comments", "shares", "timestamp", "tags"],
     "Labs": ["id", "name", "type", "description", "icon", "capacity", "location", "consumables"],
@@ -206,17 +205,14 @@ function doPost(e) {
 
     switch (action) {
       case 'enrollStudent':
-        // FIX: Use dedicated helper to handle StartDate correctly
         result = handleEnrollStudent(ss, data);
         break;
 
       case 'updateProgress':
-        // FIX: Use dedicated helper that auto-creates enrollment if missing
         result = handleUpdateProgress(ss, data.studentId, data.courseId, data.progress);
         break;
         
       case 'registerStudent':
-        // Basic registration (simplified for brevity)
         const stSheet = ss.getSheetByName('Students');
         stSheet.appendRow([
           data.name, data.id, data.email, data.city || '', data.country || '', data.avatar, 'student', 0, 0, new Date().toISOString()
@@ -227,7 +223,6 @@ function doPost(e) {
       case 'addCourse':
         const cSheet = ss.getSheetByName('Courses');
         const newCId = 'c' + new Date().getTime();
-        
         cSheet.appendRow([
           newCId, data.title, data.category, data.level, data.instructor, 
           data.durationHours, data.description, data.thumbnail, data.videoUrl || '', 
@@ -247,10 +242,9 @@ function doPost(e) {
       case 'updateAvatar':
         const studentSheet = ss.getSheetByName('Students');
         const studentData = studentSheet.getDataRange().getValues();
-        // Find by ID
         for(let i=1; i<studentData.length; i++) {
-           if(studentData[i][1] === data.studentId) { // Index 1 is ID
-              studentSheet.getRange(i+1, 6).setValue(data.avatarUrl); // Index 5 (col 6) is avatar
+           if(studentData[i][1] === data.studentId) {
+              studentSheet.getRange(i+1, 6).setValue(data.avatarUrl);
               result = { status: 'updated' };
               break;
            }
@@ -261,7 +255,6 @@ function doPost(e) {
       case 'addProject':
         const pSheet = ss.getSheetByName('Projects');
         const newPId = 'p' + new Date().getTime();
-        // UPDATED: Include blogUrl and docsUrl in row data
         pSheet.appendRow([
            newPId, 
            data.title, 
@@ -272,7 +265,7 @@ function doPost(e) {
            data.category, 
            data.status, 
            data.thumbnail, 
-           0, 
+           0, // Initial likes
            Array.isArray(data.tags) ? data.tags.join(',') : data.tags, 
            data.githubUrl || '', 
            data.demoUrl || '', 
@@ -286,16 +279,30 @@ function doPost(e) {
         
       case 'likeProject':
         const projSheet = ss.getSheetByName('Projects');
-        const projData = projSheet.getDataRange().getValues();
-        const headers = projData[0];
+        if (!projSheet) { result = { error: 'Projects sheet missing' }; break; }
+        
+        const projRange = projSheet.getDataRange();
+        const projValues = projRange.getValues();
+        const headers = projValues[0];
         const idIdx = headers.indexOf('id');
-        const likesIdx = headers.indexOf('likes');
+        let likesIdx = headers.indexOf('likes');
+        
+        // SELF-HEALING: If 'likes' column is missing in the Sheet, create it automatically
+        if (likesIdx === -1) {
+           likesIdx = headers.length; // New index at the end
+           projSheet.getRange(1, likesIdx + 1).setValue('likes').setFontWeight('bold');
+           // No need to reload values; we know new column is empty
+        }
         
         let found = false;
-        for (let i = 1; i < projData.length; i++) {
-           if (projData[i][idIdx] == data.projectId) {
-              const currentLikes = Number(projData[i][likesIdx]) || 0;
-              projSheet.getRange(i + 1, likesIdx + 1).setValue(currentLikes + 1);
+        for (let i = 1; i < projValues.length; i++) {
+           // String comparison for robustness
+           if (String(projValues[i][idIdx]) === String(data.projectId)) {
+              // Read current value directly from cell (in case likesIdx was just added and isn't in projValues)
+              const cell = projSheet.getRange(i + 1, likesIdx + 1);
+              const currentLikes = Number(cell.getValue()) || 0;
+              
+              cell.setValue(currentLikes + 1);
               found = true;
               break;
            }
@@ -406,37 +413,29 @@ function handleEnrollStudent(ss, data) {
   const sheet = ss.getSheetByName('Enrollments');
   const allData = sheet.getDataRange().getValues();
   const headers = allData[0];
-  
-  // Map headers to column indices for safety
   const idx = {};
   headers.forEach((h, i) => idx[h] = i);
   
-  // Find existing enrollment
   let rowIndex = -1;
   for (let i = 1; i < allData.length; i++) {
     if (allData[i][idx['studentId']] == data.studentId && allData[i][idx['courseId']] == data.courseId) {
-      rowIndex = i + 1; // 1-based index for Sheet
+      rowIndex = i + 1;
       break;
     }
   }
 
-  // Values to save
   const hours = data.hoursPerWeek || 0;
-  // FIX: Use provided startDate or fallback to today
   const startDate = data.startDate || new Date().toISOString().split('T')[0];
   const targetDate = data.targetCompletionDate || data.targetDate || '';
   const progress = data.progress !== undefined ? data.progress : 0;
 
   if (rowIndex > -1) {
-    // UPDATE EXISTING
-    // Only update fields that were provided
     if (data.hoursPerWeek) sheet.getRange(rowIndex, idx['hoursPerWeek'] + 1).setValue(hours);
     if (targetDate) sheet.getRange(rowIndex, idx['targetDate'] + 1).setValue(targetDate);
     if (data.startDate) sheet.getRange(rowIndex, idx['startDate'] + 1).setValue(startDate);
     
     return { status: 'updated', enrollmentId: allData[rowIndex-1][idx['enrollmentId']] };
   } else {
-    // CREATE NEW
     const newId = 'e' + new Date().getTime();
     const newRow = headers.map(h => {
       if (h === 'enrollmentId') return newId;
@@ -446,7 +445,7 @@ function handleEnrollStudent(ss, data) {
       if (h === 'startDate') return startDate;
       if (h === 'targetDate') return targetDate;
       if (h === 'hoursPerWeek') return hours;
-      return ''; // Empty for other columns
+      return '';
     });
     
     sheet.appendRow(newRow);
@@ -458,7 +457,6 @@ function handleUpdateProgress(ss, studentId, courseId, progress) {
   const sheet = ss.getSheetByName('Enrollments');
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
-  
   const sIdIdx = headers.indexOf('studentId');
   const cIdIdx = headers.indexOf('courseId');
   const progIdx = headers.indexOf('progress');
@@ -474,22 +472,16 @@ function handleUpdateProgress(ss, studentId, courseId, progress) {
   }
 
   if (rowIndex > -1) {
-    // FOUND: Update it
     sheet.getRange(rowIndex, progIdx + 1).setValue(progress);
-    
-    // Reward points on completion
     if (Number(progress) === 100 && Number(data[rowIndex-1][progIdx]) < 100) {
       updateStudentPoints(ss, studentId, 100);
     }
-    
     return { status: 'updated', progress: progress };
   } else {
-    // NOT FOUND: Self-Healing -> Create it now
     return handleEnrollStudent(ss, {
       studentId: studentId,
       courseId: courseId,
       progress: progress,
-      // Default dummy values for the plan since the user skipped the planner
       hoursPerWeek: 5,
       startDate: new Date().toISOString().split('T')[0],
       targetCompletionDate: ''
@@ -501,5 +493,4 @@ function handleUpdateProgress(ss, studentId, courseId, progress) {
 function populateAllSampleData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   setupFullDatabase();
-  // ... (keep your existing populate logic if you want, or just rely on the app to fill it)
 }
