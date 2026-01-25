@@ -155,11 +155,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
 
   return (
     <>
-      {/* Toggle Button */}
+      {/* Toggle Button - Adjusted position for mobile to sit above BottomNav */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center
+        className={`fixed bottom-20 md:bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 flex items-center justify-center
           ${isOpen 
             ? 'bg-red-500 text-white rotate-90' 
             : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
@@ -170,7 +170,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ courses, user, enrollments, leaderboa
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-8rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-scale-in origin-bottom-right">
+        <div className="fixed bottom-[144px] md:bottom-24 right-6 z-40 w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[calc(100vh-12rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden animate-scale-in origin-bottom-right">
           
           {/* Header */}
           <div className="bg-slate-900 dark:bg-slate-800 p-4 flex items-center justify-between border-b border-slate-700">
