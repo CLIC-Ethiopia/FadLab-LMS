@@ -20,7 +20,10 @@ import {
   CheckCircle,
   Sparkles,
   Zap,
-  Target
+  Target,
+  TrendingUp,
+  History,
+  Brain
 } from 'lucide-react';
 
 const SteamIE: React.FC = () => {
@@ -332,7 +335,7 @@ const SteamIE: React.FC = () => {
       </div>
 
       {/* Global Context Resources */}
-      <div className="space-y-8">
+      <div className="space-y-12">
         <div className="flex items-center justify-between">
            <h3 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
              <Globe className="w-6 h-6 text-indigo-500" />
@@ -341,7 +344,8 @@ const SteamIE: React.FC = () => {
            <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1 ml-6 hidden md:block"></div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card 1: CLIC Africa */}
           <a href="https://clicafrica.org/" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full">
             <div>
                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -357,6 +361,55 @@ const SteamIE: React.FC = () => {
             </div>
           </a>
 
+          {/* Card 2: Smart Business Platform (GenAI) */}
+          <div className="group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full cursor-pointer">
+            <div>
+               <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <Brain className="w-6 h-6" />
+               </div>
+               <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Smart Business Platform</h4>
+               <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                 Access our GenAI-powered business idea bank. Translate your STEAM-IE prototypes into viable, scalable market solutions.
+               </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+               Launch Idea Bank <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Card 3: African Industrial Revolutions */}
+          <div className="group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full cursor-pointer">
+            <div>
+               <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <History className="w-6 h-6" />
+               </div>
+               <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-3">African Industrial Context</h4>
+               <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                 A deep dive into Africa's unique industrial trajectory, focusing on leapfrogging technologies and 4IR frameworks.
+               </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-widest">
+               Explore Timeline <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Card 4: Future Skills & Demand */}
+          <div className="group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full cursor-pointer">
+            <div>
+               <div className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="w-6 h-6" />
+               </div>
+               <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Future STEAM-IE Demand</h4>
+               <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                 Mapping the 2030 skill-sets required to transform the African economy through high-value industrial manufacturing.
+               </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-widest">
+               View Skill Map <ChevronRight className="w-4 h-4" />
+            </div>
+          </div>
+
+          {/* Card 5: Academic Roadmap */}
           <a href="#" target="_blank" rel="noopener noreferrer" className="group bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full">
             <div>
                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -372,6 +425,7 @@ const SteamIE: React.FC = () => {
             </div>
           </a>
 
+          {/* Card 6: The Whitepaper */}
           <a href="#" target="_blank" rel="noopener noreferrer" className="group bg-slate-900 p-8 rounded-3xl shadow-xl transition-all hover:-translate-y-2 flex flex-col justify-between h-full">
             <div>
                <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
