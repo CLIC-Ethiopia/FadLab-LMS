@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HashRouter } from 'react-router-dom';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
@@ -14,7 +14,7 @@ import SocialHub from './components/SocialHub';
 import InnoLab from './components/InnoLab';
 import LabManager from './components/LabManager';
 import AdminLoginModal from './components/AdminLoginModal';
-import BottomNav from './components/BottomNav'; // NEW
+import BottomNav from './components/BottomNav';
 import { sheetService } from './services/sheetService';
 import { AuthState, Course, Enrollment, Student, AdminStats } from './types';
 import { LayoutDashboard, BookOpen, Settings, LogOut, Loader2, Moon, Sun, User, Upload, ShieldCheck, RefreshCw, Lightbulb, Users, FlaskConical, Wrench } from 'lucide-react';
@@ -27,6 +27,9 @@ const App: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<Student[]>([]);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   
+  // Ref for the scrollable content area
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   // Modal States
   const [plannerCourse, setPlannerCourse] = useState<Course | null>(null);
   const [detailsCourse, setDetailsCourse] = useState<Course | null>(null);
@@ -47,6 +50,13 @@ const App: React.FC = () => {
     }
     return false;
   });
+
+  // Scroll to top whenever currentView changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [currentView]);
 
   // Apply theme to document
   useEffect(() => {
@@ -293,7 +303,10 @@ const App: React.FC = () => {
           </header>
 
           {/* Content Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8"> {/* Added extra bottom padding for mobile nav */}
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8"
+          >
             <div className="max-w-6xl mx-auto">
               {/* Sync Status Indicator */}
               <div className="flex justify-end mb-4">
