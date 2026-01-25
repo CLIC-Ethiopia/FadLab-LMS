@@ -1,7 +1,7 @@
 
 /* =========================================
    FADLAB API BACKEND (Google Apps Script)
-   REVISED: ADDITIVE SCHEMA & GAMIFICATION
+   REVISED VERSION FOR GAMIFICATION & SME
    ========================================= */
 
 function setupFullDatabase() {
@@ -19,51 +19,6 @@ function setupFullDatabase() {
     if (!sheet) {
       sheet = ss.insertSheet(sheetName);
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight("bold");
-    } else {
-      // Add missing columns non-destructively
-      const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn() || 1).getValues()[0];
-      headers.forEach(h => {
-        if (currentHeaders.indexOf(h) === -1) {
-          const newCol = sheet.getLastColumn() + 1;
-          sheet.getRange(1, newCol).setValue(h).setFontWeight("bold");
-        }
-      });
-    }
-  }
-}
-
-/**
- * Migration Helper: Call this ONCE to populate new columns for existing data.
- */
-function patchExistingData() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  // Patch Courses
-  const cSheet = ss.getSheetByName('Courses');
-  const cData = cSheet.getDataRange().getValues();
-  const cHeaders = cData[0];
-  const mIdx = cHeaders.indexOf('masteryPoints');
-  const dIdx = cHeaders.indexOf('durationHours');
-  for (let i = 1; i < cData.length; i++) {
-    if (!cData[i][mIdx]) {
-      const duration = Number(cData[i][dIdx]) || 10;
-      cSheet.getRange(i + 1, mIdx + 1).setValue(duration * 10);
-    }
-  }
-
-  // Patch Students
-  const sSheet = ss.getSheetByName('Students');
-  const sData = sSheet.getDataRange().getValues();
-  const sHeaders = sData[0];
-  const xpIdx = sHeaders.indexOf('knowledgeXP');
-  const oldPtsIdx = sHeaders.indexOf('points'); // Compatibility with old points column
-  const titleIdx = sHeaders.indexOf('rankTitle');
-  
-  for (let i = 1; i < sData.length; i++) {
-    const currentXP = Number(sData[i][xpIdx]) || Number(sData[i][oldPtsIdx]) || 0;
-    if (xpIdx !== -1) sSheet.getRange(i + 1, xpIdx + 1).setValue(currentXP);
-    if (titleIdx !== -1 && !sData[i][titleIdx]) {
-      sSheet.getRange(i + 1, titleIdx + 1).setValue("Campus Apprentice");
     }
   }
 }
@@ -81,9 +36,7 @@ function doGet(e) {
           resources: parseJSON(c.resources, []),
           learningPoints: parseJSON(c.learningPoints, []),
           prerequisites: parseJSON(c.prerequisites, []),
-          curriculum: parseJSON(c.curriculum, []),
-          masteryPoints: Number(c.masteryPoints || 100),
-          durationHours: Number(c.durationHours || 10)
+          curriculum: parseJSON(c.curriculum, [])
         }));
         break;
 
@@ -92,7 +45,7 @@ function doGet(e) {
         if (student) {
           const enrollments = getSheetData(ss, 'Enrollments').filter(en => en.studentId === student.id);
           student.enrolledCourses = enrollments.map(en => en.courseId);
-          student.knowledgeXP = Number(student.knowledgeXP || student.points || 0);
+          student.points = Number(student.knowledgeXP) || 0; // Standardize field name for frontend
           result = student;
         } else result = null;
         break;
@@ -100,19 +53,11 @@ function doGet(e) {
       case 'getLeaderboard':
         result = getSheetData(ss, 'Students')
           .filter(s => s.role === 'student')
-          .sort((a, b) => Number(b.knowledgeXP || 0) - Number(a.knowledgeXP || 0));
-        break;
-
-      case 'getStudentEnrollments':
-        result = getSheetData(ss, 'Enrollments').filter(en => en.studentId === e.parameter.studentId);
+          .sort((a, b) => Number(b.knowledgeXP) - Number(a.knowledgeXP));
         break;
 
       case 'getProjects':
         result = getSheetData(ss, 'Projects');
-        break;
-
-      case 'getLabs':
-        result = []; // Labs data can be added here
         break;
 
       default:
@@ -134,21 +79,20 @@ function doPost(e) {
     switch (action) {
       case 'registerStudent':
         const stSheet = ss.getSheetByName('Students');
-        const headers = stSheet.getDataRange().getValues()[0];
-        const newRow = headers.map(h => {
-          if (h === 'name') return data.name;
-          if (h === 'id') return data.id;
-          if (h === 'email') return data.email;
-          if (h === 'avatar') return data.avatar;
-          if (h === 'role') return data.role || 'student';
-          if (h === 'knowledgeXP') return 0;
-          if (h === 'rank') return 0;
-          if (h === 'rankTitle') return 'Campus Apprentice';
-          if (h === 'joinedDate') return new Date().toISOString();
-          return '';
-        });
-        stSheet.appendRow(newRow);
+        stSheet.appendRow([data.name, data.id, data.email, data.avatar, 'student', 0, 0, 'Campus Apprentice', new Date().toISOString()]);
         result = { status: 'registered' };
+        break;
+
+      case 'addCourse':
+        const cSheet = ss.getSheetByName('Courses');
+        const newCId = 'c' + new Date().getTime();
+        cSheet.appendRow([
+          newCId, data.title, data.category, data.level, data.instructor, data.durationHours, data.masteryPoints, 
+          data.businessOpportunities || '', data.description, data.thumbnail, data.videoUrl || '', 
+          JSON.stringify(data.resources || []), JSON.stringify(data.learningPoints || []), 
+          JSON.stringify(data.prerequisites || []), JSON.stringify(data.curriculum || [])
+        ]);
+        result = { status: 'success', id: newCId };
         break;
 
       case 'updateProgress':
@@ -159,40 +103,32 @@ function doPost(e) {
         result = handleEnrollStudent(ss, data);
         break;
 
-      case 'addCourse':
-        const cSheet = ss.getSheetByName('Courses');
-        const cHeaders = cSheet.getDataRange().getValues()[0];
-        const newCId = 'c' + new Date().getTime();
-        const courseRow = cHeaders.map(h => {
-          if (h === 'id') return newCId;
-          if (h === 'resources' || h === 'learningPoints' || h === 'prerequisites' || h === 'curriculum') 
-            return JSON.stringify(data[h] || []);
-          return data[h] || '';
-        });
-        cSheet.appendRow(courseRow);
-        result = { status: 'success', id: newCId };
-        break;
-
-      case 'likeProject':
-        result = handleLikeProject(ss, data.projectId);
-        break;
-
       case 'addProject':
         const pSheet = ss.getSheetByName('Projects');
-        const pHeaders = pSheet.getDataRange().getValues()[0];
-        const pRow = pHeaders.map(h => {
-          if (h === 'id') return 'p' + new Date().getTime();
-          if (h === 'likes') return 0;
-          if (h === 'timestamp') return new Date().toISOString().split('T')[0];
-          if (h === 'tags') return Array.isArray(data.tags) ? data.tags.join(',') : data.tags;
-          return data[h] || '';
-        });
-        pSheet.appendRow(pRow);
+        pSheet.appendRow([
+          'p' + new Date().getTime(), data.title, data.description, data.authorId, data.authorName, data.authorAvatar,
+          data.category, data.status, data.thumbnail, 0, Array.isArray(data.tags) ? data.tags.join(',') : data.tags,
+          data.githubUrl || '', data.demoUrl || '', data.blogUrl || '', data.docsUrl || '', new Date().toISOString()
+        ]);
         result = { status: 'success' };
         break;
 
+      case 'likeProject':
+        const projSheet = ss.getSheetByName('Projects');
+        const projRows = projSheet.getDataRange().getValues();
+        const likesColIdx = projRows[0].indexOf('likes');
+        for (let i = 1; i < projRows.length; i++) {
+          if (projRows[i][0] == data.projectId) {
+            const currentLikes = Number(projRows[i][likesColIdx]) || 0;
+            projSheet.getRange(i + 1, likesColIdx + 1).setValue(currentLikes + 1);
+            result = { status: 'liked' };
+            break;
+          }
+        }
+        break;
+
       default:
-        result = { error: 'Unknown Action: ' + action };
+        result = { error: 'Unknown POST Action' };
     }
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
@@ -205,7 +141,6 @@ function getSheetData(ss, name) {
   const sheet = ss.getSheetByName(name);
   if (!sheet) return [];
   const data = sheet.getDataRange().getValues();
-  if (data.length < 2) return [];
   const headers = data[0];
   return data.slice(1).map(row => {
     let obj = {};
@@ -214,24 +149,26 @@ function getSheetData(ss, name) {
   });
 }
 
-function parseJSON(s, f) { 
-  if (!s) return f;
-  try { return JSON.parse(s); } catch(e) { return f; } 
-}
+function parseJSON(s, f) { try { return JSON.parse(s); } catch(e) { return f; } }
 
 function handleEnrollStudent(ss, data) {
   const sheet = ss.getSheetByName('Enrollments');
-  const headers = sheet.getDataRange().getValues()[0];
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const sIdx = headers.indexOf('studentId');
+  const cIdx = headers.indexOf('courseId');
+  
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][sIdx] == data.studentId && rows[i][cIdx] == data.courseId) return { status: 'exists' };
+  }
+  
   const newRow = headers.map(h => {
     if (h === 'enrollmentId') return 'e' + new Date().getTime();
     if (h === 'studentId') return data.studentId;
     if (h === 'courseId') return data.courseId;
     if (h === 'progress') return 0;
     if (h === 'xpEarned') return 0;
-    if (h === 'startDate') return data.startDate || new Date().toISOString();
-    if (h === 'targetDate') return data.targetCompletionDate || data.targetDate || '';
-    if (h === 'hoursPerWeek') return data.hoursPerWeek || 5;
-    return '';
+    return data[h] || '';
   });
   sheet.appendRow(newRow);
   return { status: 'enrolled' };
@@ -254,10 +191,11 @@ function handleUpdateProgress(ss, studentId, courseId, progress) {
     if (enRows[i][sIdx] == studentId && enRows[i][cIdx] == courseId) {
       const newXp = Math.floor((progress / 100) * mastery);
       enSheet.getRange(i + 1, pIdx + 1).setValue(progress);
-      if (xpIdx !== -1) enSheet.getRange(i + 1, xpIdx + 1).setValue(newXp);
+      enSheet.getRange(i + 1, xpIdx + 1).setValue(newXp);
       
-      // Re-calculate Student Total XP
+      // Re-calculate Student Total XP and Rank Title
       const allEnrolls = getSheetData(ss, 'Enrollments').filter(e => e.studentId == studentId);
+      // We must consider the update we just made as getSheetData might be cached or slow
       let totalXp = 0;
       allEnrolls.forEach(e => {
         if (e.courseId == courseId) totalXp += newXp;
@@ -277,7 +215,6 @@ function updateStudentXP(ss, studentId, totalXp) {
   const headers = data[0];
   const xpCol = headers.indexOf('knowledgeXP') + 1;
   const titleCol = headers.indexOf('rankTitle') + 1;
-  const idCol = headers.indexOf('id');
   
   let title = "Campus Apprentice";
   if (totalXp > 2000) title = "Master Innovator";
@@ -285,29 +222,10 @@ function updateStudentXP(ss, studentId, totalXp) {
   else if (totalXp > 500) title = "Industrial Technician";
 
   for (let i = 1; i < data.length; i++) {
-    if (data[i][idCol] == studentId) {
-      if (xpCol > 0) sheet.getRange(i + 1, xpCol).setValue(totalXp);
-      if (titleCol > 0) sheet.getRange(i + 1, titleCol).setValue(title);
+    if (data[i][1] == studentId) {
+      sheet.getRange(i + 1, xpCol).setValue(totalXp);
+      sheet.getRange(i + 1, titleCol).setValue(title);
       break;
     }
   }
-}
-
-function handleLikeProject(ss, projectId) {
-  const sheet = ss.getSheetByName('Projects');
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const idIdx = headers.indexOf('id');
-  const likesIdx = headers.indexOf('likes');
-  
-  if (likesIdx === -1) return { error: 'Likes column missing' };
-
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][idIdx] == projectId) {
-      const current = Number(data[i][likesIdx]) || 0;
-      sheet.getRange(i + 1, likesIdx + 1).setValue(current + 1);
-      return { status: 'liked' };
-    }
-  }
-  return { error: 'Project not found' };
 }

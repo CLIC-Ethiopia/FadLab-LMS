@@ -26,8 +26,8 @@ export interface Course {
   title: string;
   category: CourseCategory;
   durationHours: number;
-  masteryPoints: number; // For gamification
-  businessOpportunities?: string; // SME idea keywords
+  masteryPoints: number; 
+  businessOpportunities?: string; // Comma separated list for SME ideas
   description: string;
   instructor: string;
   thumbnail: string;
@@ -57,7 +57,7 @@ export interface Student {
   projectIds?: string[];
   points: number; // Knowledge XP
   rank: number;
-  rankTitle?: string; // e.g. "Lead Engineer"
+  rankTitle?: string; // e.g. "Master Innovator"
 }
 
 export interface Enrollment {
@@ -67,7 +67,7 @@ export interface Enrollment {
   plannedHoursPerWeek: number;
   startDate: string;
   targetCompletionDate: string;
-  xpEarned?: number; // Proportional XP from this course
+  xpEarned?: number; // Tracks XP awarded from this specific course
 }
 
 export interface AdminStats {
@@ -126,6 +126,8 @@ export interface Project {
   docsUrl?: string; 
   timestamp: string;
 }
+
+// --- LAB MANAGER TYPES ---
 
 export type LabType = 'Fabrication' | 'Digital' | 'Field' | 'Business';
 
