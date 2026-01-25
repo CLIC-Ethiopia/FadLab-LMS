@@ -26,16 +26,17 @@ export interface Course {
   title: string;
   category: CourseCategory;
   durationHours: number;
-  masteryPoints: number; // Added masteryPoints
+  masteryPoints: number; 
+  businessOpportunities?: string; // Comma separated list for SME ideas
   description: string;
   instructor: string;
   thumbnail: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  videoUrl?: string; // Intro video
+  videoUrl?: string;
   resources?: Resource[];
-  learningPoints?: string[]; // What you'll learn
-  prerequisites?: string[]; // Requirements
-  curriculum?: CourseModule[]; // Modules list
+  learningPoints?: string[];
+  prerequisites?: string[];
+  curriculum?: CourseModule[];
 }
 
 export interface StudyPlan {
@@ -54,8 +55,9 @@ export interface Student {
   enrolledCourses: string[]; 
   studyPlans?: StudyPlan[];
   projectIds?: string[];
-  points: number;
+  points: number; // Knowledge XP
   rank: number;
+  rankTitle?: string; // e.g. "Master Innovator"
 }
 
 export interface Enrollment {
@@ -65,6 +67,7 @@ export interface Enrollment {
   plannedHoursPerWeek: number;
   startDate: string;
   targetCompletionDate: string;
+  xpEarned?: number; // Tracks XP awarded from this specific course
 }
 
 export interface AdminStats {
