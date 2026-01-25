@@ -258,7 +258,7 @@ const App: React.FC = () => {
         <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 hidden md:flex flex-col transition-colors duration-200">
           <div className="p-6 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-yellow-500 rounded-lg shadow-sm"></div>
+              <img src="/logo.png" alt="FadLab Logo" className="w-8 h-8 object-contain" />
               <span className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">FadLab</span>
             </div>
             <div className="mt-2 flex items-center gap-2">
@@ -396,7 +396,7 @@ const App: React.FC = () => {
           {/* Mobile Header */}
           <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-yellow-500 rounded-md"></div>
+              <img src="/logo.png" alt="FadLab Logo" className="w-6 h-6 object-contain" />
               <span className="font-bold text-lg text-slate-800 dark:text-slate-100">FadLab</span>
             </div>
             <div className="flex items-center gap-4">

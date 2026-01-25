@@ -58,8 +58,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           
           {/* Header */}
           <div className="p-8 pb-0 text-center">
-             <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-500 via-green-500 to-blue-500 rounded-2xl flex items-center justify-center mb-6 shadow-lg transform rotate-3 hover:rotate-0 transition-all duration-500">
-                {isAdminView ? <Shield className="text-white w-8 h-8" /> : <Laptop className="text-white w-8 h-8" />}
+             <div className="mx-auto w-20 h-20 mb-6 flex items-center justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="FadLab Logo" 
+                  className="w-full h-full object-contain transform hover:scale-110 transition-all duration-500" 
+                />
              </div>
              <h1 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
                {isAdminView ? "Admin Portal" : "FadLab LMS"}
