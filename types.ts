@@ -26,15 +26,16 @@ export interface Course {
   title: string;
   category: CourseCategory;
   durationHours: number;
+  masteryPoints: number; // Added masteryPoints
   description: string;
   instructor: string;
   thumbnail: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  videoUrl?: string; // New: Intro video
+  videoUrl?: string; // Intro video
   resources?: Resource[];
-  learningPoints?: string[]; // New: What you'll learn
-  prerequisites?: string[]; // New: Requirements
-  curriculum?: CourseModule[]; // New: Modules list
+  learningPoints?: string[]; // What you'll learn
+  prerequisites?: string[]; // Requirements
+  curriculum?: CourseModule[]; // Modules list
 }
 
 export interface StudyPlan {
@@ -118,8 +119,8 @@ export interface Project {
   status: 'Idea' | 'Prototype' | 'Launched';
   githubUrl?: string;
   demoUrl?: string;
-  blogUrl?: string; // New field
-  docsUrl?: string; // New field
+  blogUrl?: string; 
+  docsUrl?: string; 
   timestamp: string;
 }
 

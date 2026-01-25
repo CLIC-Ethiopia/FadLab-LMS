@@ -331,7 +331,13 @@ const Dashboard: React.FC<DashboardProps> = ({ student, enrollments, courses, le
                             <Edit className="w-4 h-4" />
                         </button>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 mt-1 block">{course.category} SPECIALIZATION</span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{course.category} SPECIALIZATION</span>
+                        <div className="flex items-center gap-1 text-amber-500 dark:text-amber-400">
+                           <Zap className="w-2.5 h-2.5 fill-current" />
+                           <span className="text-[10px] font-black">{course.masteryPoints} XP</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

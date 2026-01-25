@@ -9,7 +9,6 @@ import { Course, CourseCategory, Student, Enrollment, AdminStats, SocialPost, Pr
  * 2. If the API fails or is not configured, fall back to local MOCK_DATA.
  * 3. NEW: We persist MOCK_DATA to localStorage to act as a client-side database.
  */
-// Defensive check for import.meta.env to avoid runtime errors in some environments
 const API_URL = (import.meta.env && import.meta.env.VITE_GOOGLE_SHEET_API_URL) || '';
 
 // Admin Credentials
@@ -24,6 +23,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'Introduction to STEAM',
     category: CourseCategory.Science,
     durationHours: 15,
+    masteryPoints: 150,
     description: 'Foundational concepts of Science, Technology, Engineering, Arts, and Math.',
     instructor: 'Prof. Frehun Adefris',
     thumbnail: 'https://picsum.photos/400/225?random=1',
@@ -55,6 +55,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'Smart Agriculture: Hydroponics',
     category: CourseCategory.Technology,
     durationHours: 30,
+    masteryPoints: 300,
     description: 'Learn vertical farming and hydroponic systems for urban settings.',
     instructor: 'Dr. Abyot Redahegn',
     thumbnail: 'https://picsum.photos/400/225?random=2',
@@ -83,6 +84,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'IoT & Industrial Robotics',
     category: CourseCategory.Engineering,
     durationHours: 45,
+    masteryPoints: 500,
     description: 'Building smart machines and connected infrastructure.',
     instructor: 'Eng. Nathnael',
     thumbnail: 'https://picsum.photos/400/225?random=3',
@@ -97,6 +99,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'Entrepreneurship 101',
     category: CourseCategory.Entrepreneurship,
     durationHours: 20,
+    masteryPoints: 200,
     description: 'From ideation to business incubation and funding.',
     instructor: 'Lecturer Mulunesh',
     thumbnail: 'https://picsum.photos/400/225?random=4',
@@ -111,6 +114,7 @@ const DEFAULT_COURSES: Course[] = [
     title: '3D Concrete Printing',
     category: CourseCategory.Innovation,
     durationHours: 40,
+    masteryPoints: 450,
     description: 'Revolutionizing construction with additive manufacturing.',
     instructor: 'Prof. Frehun Adefris',
     thumbnail: 'https://picsum.photos/400/225?random=5',
@@ -124,6 +128,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'Applied Industrial Math',
     category: CourseCategory.Mathematics,
     durationHours: 12,
+    masteryPoints: 120,
     description: 'Statistical analysis and geometry for manufacturing.',
     instructor: 'Dr. Almaz',
     thumbnail: 'https://picsum.photos/400/225?random=6',
@@ -134,6 +139,7 @@ const DEFAULT_COURSES: Course[] = [
     title: 'Digital Arts & Design',
     category: CourseCategory.Arts,
     durationHours: 25,
+    masteryPoints: 250,
     description: 'Using digital tools for industrial design and creative expression.',
     instructor: 'Artist Kebede',
     thumbnail: 'https://picsum.photos/400/225?random=7',
@@ -270,64 +276,6 @@ const DEFAULT_PROJECTS: Project[] = [
     demoUrl: 'https://play.google.com/store/apps',
     blogUrl: 'https://dev.to/beth/ocr-amharic',
     timestamp: '2023-10-05'
-  },
-  {
-    id: 'p4',
-    title: 'Ethio-Pattern Digital Weaving',
-    description: 'A digital art project that uses algorithmic design to generate new patterns inspired by traditional Ethiopian Tibeb. These patterns are then exported for use on modern Jacquard looms.',
-    category: CourseCategory.Arts,
-    tags: ['Generative Art', 'Textile', 'Culture', 'Design'],
-    thumbnail: 'https://images.unsplash.com/photo-1523920716677-4847043cb837?q=80&w=800&auto=format&fit=crop',
-    authorId: 's5',
-    authorName: 'Sarah Mohammed',
-    authorAvatar: 'https://ui-avatars.com/api/?name=Sarah+M&background=random',
-    likes: 56,
-    status: 'Prototype',
-    timestamp: '2023-11-20'
-  },
-  {
-    id: 'p5',
-    title: 'Addis Traffic Optimization Model',
-    description: 'A mathematical model using graph theory and queuing theory to optimize traffic light timing at major intersections in Addis Ababa. Simulations show a potential 15% reduction in congestion.',
-    category: CourseCategory.Mathematics,
-    tags: ['Data Science', 'Simulation', 'Urban Planning', 'Statistics'],
-    thumbnail: 'https://images.unsplash.com/photo-1494522855154-9297ac14b55f?q=80&w=800&auto=format&fit=crop',
-    authorId: 's6',
-    authorName: 'Dawit Kebede',
-    authorAvatar: 'https://ui-avatars.com/api/?name=Dawit+K&background=random',
-    likes: 28,
-    status: 'Idea',
-    docsUrl: 'https://arxiv.org/abs/example',
-    timestamp: '2023-11-01'
-  },
-  {
-    id: 'p6',
-    title: 'Low-Cost Modular Housing',
-    description: 'An innovative architectural design for rapid-deployment housing using locally sourced bamboo and interlocking compressed earth blocks (ICEB). Designed for scalability and affordability.',
-    category: CourseCategory.Innovation,
-    tags: ['Architecture', 'Sustainable Housing', '3D Modeling'],
-    thumbnail: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=800&auto=format&fit=crop',
-    authorId: 's2',
-    authorName: 'Tirunesh Dibaba',
-    authorAvatar: 'https://picsum.photos/100/100?random=11',
-    likes: 67,
-    status: 'Prototype',
-    timestamp: '2023-12-01'
-  },
-  {
-    id: 'p7',
-    title: 'CoffeeChain: Fair Trade Tracker',
-    description: 'A blockchain-based platform ensuring transparency in the coffee supply chain. It connects farmers directly to exporters, ensuring fair pricing and traceability for Ethiopian premium coffee.',
-    category: CourseCategory.Entrepreneurship,
-    tags: ['Blockchain', 'Supply Chain', 'FinTech', 'Business'],
-    thumbnail: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop',
-    authorId: 's7',
-    authorName: 'Samuel Alemu',
-    authorAvatar: 'https://ui-avatars.com/api/?name=Samuel+A&background=random',
-    likes: 92,
-    status: 'Launched',
-    demoUrl: 'https://coffeechain.eth',
-    timestamp: '2023-09-15'
   }
 ];
 
@@ -359,7 +307,7 @@ let MOCK_STUDENTS: Student[] = loadFromStorage('fadlab_students', DEFAULT_STUDEN
 let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage('fadlab_enrollments', DEFAULT_ENROLLMENTS);
 let MOCK_PROJECTS: Project[] = loadFromStorage('fadlab_projects', DEFAULT_PROJECTS);
 
-// Static data (not editable yet)
+// Static data
 const MOCK_SOCIAL_POSTS: SocialPost[] = [
   {
     id: 'fb1',
@@ -471,7 +419,6 @@ async function fetchWithFallback<T>(
             Object.keys(payload).forEach(key => params.append(key, String(payload[key])));
             url += `&${params.toString()}`;
         } else if (method === 'POST') {
-            // FIX: Apps Script POST requests must be sent as text/plain to avoid CORS preflight (OPTIONS) check failure.
             options.headers = {
               'Content-Type': 'text/plain;charset=utf-8'
             };
@@ -501,14 +448,11 @@ async function fetchWithFallback<T>(
 
 export const sheetService = {
   
-  // --- AUTH METHODS ---
-
   async verifyAdmin(email: string, pass: string): Promise<Student> {
     await delay(1000);
     if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
       const admin = MOCK_STUDENTS.find(s => s.email === email && s.role === 'admin');
       if (admin) return { ...admin };
-      // Fallback if admin removed from array but creds match
       return {
         id: 'admin_sys',
         name: 'Frehun Demissie',
@@ -524,22 +468,11 @@ export const sheetService = {
   },
 
   async loginWithSocial(provider: 'google' | 'facebook'): Promise<Student> {
-    await delay(1500); // Simulate OAuth popup delay
-    
-    // Simulate finding a user or creating a new one
-    // For demo: Facebook -> "Tirunesh" (Existing), Google -> "Demo User" (New or Existing)
-    
-    if (provider === 'facebook') {
-      const existing = MOCK_STUDENTS.find(s => s.email === 'tirunesh@fadlab.tech');
-      if (existing) return { ...existing };
-    }
-
-    // Google Login Logic (Simulated)
+    await delay(1500); 
     const demoEmail = "student.demo@gmail.com";
     let user = MOCK_STUDENTS.find(s => s.email === demoEmail);
 
     if (!user) {
-      // Create new user (First time login)
       user = {
         id: `s_${Date.now()}`,
         name: "New Student",
@@ -552,7 +485,6 @@ export const sheetService = {
         points: 0,
         rank: MOCK_STUDENTS.length + 1
       };
-      // Register them
       return this.registerStudent(user);
     }
 
@@ -565,12 +497,9 @@ export const sheetService = {
       saveToStorage('fadlab_students', MOCK_STUDENTS);
       return { ...student };
     };
-    // We try to POST to sheet to save the user in the cloud
     return fetchWithFallback<Student>('registerStudent', fallback, 'POST', student);
   },
 
-  // --- COURSE & DATA METHODS ---
-  
   async getCourses(): Promise<Course[]> {
     const fallback = async () => {
         await delay(500);
@@ -628,8 +557,6 @@ export const sheetService = {
   async getStudentProfile(email: string): Promise<Student | null> {
     const fallback = async () => {
         await delay(800);
-        // CRITICAL: We find the student and return a DEEP copy to ensure React re-renders.
-        // Reading directly from MOCK_STUDENTS ensures we get the latest data after an update.
         const student = MOCK_STUDENTS.find(s => s.email === email);
         if (!student) return null;
         
@@ -663,11 +590,9 @@ export const sheetService = {
         await delay(600);
         return MOCK_ENROLLMENTS.filter(e => e.studentId === studentId);
     };
-    // Fetch data and map it defensively to ensure properties exist
     const data = await fetchWithFallback<any[]>('getStudentEnrollments', fallback, 'GET', { studentId });
     return data.map(e => ({
       ...e,
-      // Map 'hoursPerWeek' (backend) to 'plannedHoursPerWeek' (frontend) if missing
       plannedHoursPerWeek: e.plannedHoursPerWeek ?? e.hoursPerWeek ?? 0,
       targetCompletionDate: e.targetCompletionDate || e.targetDate || ''
     }));
@@ -676,13 +601,10 @@ export const sheetService = {
   async enrollStudent(studentId: string, courseId: string, plan: { hoursPerWeek: number, startDate: string, targetDate: string }): Promise<Enrollment> {
     const fallback = async () => {
         await delay(1000);
-        
-        // 1. Update Student's enrolledCourses list (simple string array) for quick lookups if needed
         const index = MOCK_STUDENTS.findIndex(s => s.id === studentId);
         if (index !== -1) {
             const student = MOCK_STUDENTS[index];
             if (!student.enrolledCourses.includes(courseId)) {
-                // Update student immutably
                  MOCK_STUDENTS[index] = {
                     ...student,
                     enrolledCourses: [...student.enrolledCourses, courseId]
@@ -691,14 +613,10 @@ export const sheetService = {
             }
         }
 
-        // 2. Manage the Enrollment Record (The Source of Truth for Progress & Plans)
-        // Check if enrollment already exists
         const existingEnrollmentIndex = MOCK_ENROLLMENTS.findIndex(e => e.studentId === studentId && e.courseId === courseId);
-
         let resultEnrollment: Enrollment;
 
         if (existingEnrollmentIndex !== -1) {
-             // Update existing enrollment with new plan details
              const existing = MOCK_ENROLLMENTS[existingEnrollmentIndex];
              resultEnrollment = {
                  ...existing,
@@ -708,7 +626,6 @@ export const sheetService = {
              };
              MOCK_ENROLLMENTS[existingEnrollmentIndex] = resultEnrollment;
         } else {
-            // Create new
             resultEnrollment = {
               studentId,
               courseId,
@@ -724,11 +641,10 @@ export const sheetService = {
         return resultEnrollment;
     };
     
-    // FIX: Send 'hoursPerWeek' instead of 'plannedHoursPerWeek' to match Backend expectations
     return fetchWithFallback<Enrollment>('enrollStudent', fallback, 'POST', { 
       studentId, 
       courseId, 
-      hoursPerWeek: plan.hoursPerWeek, // <-- Corrected Key
+      hoursPerWeek: plan.hoursPerWeek, 
       startDate: plan.startDate, 
       targetCompletionDate: plan.targetDate 
     });
@@ -739,7 +655,6 @@ export const sheetService = {
       await delay(500);
       const index = MOCK_ENROLLMENTS.findIndex(e => e.studentId === studentId && e.courseId === courseId);
       if (index !== -1) {
-        // Clamp progress to 100
         const newProgress = Math.min(Math.max(progress, 0), 100);
         MOCK_ENROLLMENTS[index] = {
           ...MOCK_ENROLLMENTS[index],

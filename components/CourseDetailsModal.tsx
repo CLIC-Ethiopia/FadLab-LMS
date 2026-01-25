@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Course, CourseCategory } from '../types';
-import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen, Layers, List, GraduationCap } from 'lucide-react';
+import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen, Layers, List, GraduationCap, Zap } from 'lucide-react';
 
 interface CourseDetailsModalProps {
   course: Course;
@@ -44,16 +44,22 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8">
-             <span className={`self-start px-3 py-1 text-xs font-bold rounded-full text-white mb-3 shadow-sm
-                  ${course.category === CourseCategory.Science ? 'bg-blue-500' : 
-                    course.category === CourseCategory.Technology ? 'bg-indigo-500' : 
-                    course.category === CourseCategory.Engineering ? 'bg-orange-500' :
-                    course.category === CourseCategory.Arts ? 'bg-pink-500' :
-                    course.category === CourseCategory.Mathematics ? 'bg-teal-500' :
-                    course.category === CourseCategory.Innovation ? 'bg-yellow-500' :
-                    'bg-green-600'}`}>
-                  {course.category}
-            </span>
+             <div className="flex gap-2 mb-3">
+               <span className={`self-start px-3 py-1 text-xs font-bold rounded-full text-white shadow-sm
+                    ${course.category === CourseCategory.Science ? 'bg-blue-500' : 
+                      course.category === CourseCategory.Technology ? 'bg-indigo-500' : 
+                      course.category === CourseCategory.Engineering ? 'bg-orange-500' :
+                      course.category === CourseCategory.Arts ? 'bg-pink-500' :
+                      course.category === CourseCategory.Mathematics ? 'bg-teal-500' :
+                      course.category === CourseCategory.Innovation ? 'bg-yellow-500' :
+                      'bg-green-600'}`}>
+                    {course.category}
+               </span>
+               <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-black rounded-full shadow-lg border border-amber-400/50">
+                  <Zap className="w-3 h-3 fill-current" />
+                  {course.masteryPoints} Mastery XP
+               </span>
+             </div>
             <h2 className="text-3xl font-bold text-white shadow-sm leading-tight">{course.title}</h2>
           </div>
           <button 

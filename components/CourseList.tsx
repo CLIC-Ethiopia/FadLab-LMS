@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Course, CourseCategory } from '../types';
-import { Search, Clock, User, BarChart, Plus } from 'lucide-react';
+import { Search, Clock, User, BarChart, Plus, Zap } from 'lucide-react';
 
 interface CourseListProps {
   courses: Course[];
@@ -65,7 +66,7 @@ const CourseList: React.FC<CourseListProps> = ({ courses, onSelectCourse, onView
                 alt={course.title} 
                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-3 right-3 flex flex-col gap-2 items-end">
                 <span className={`px-3 py-1 text-xs font-bold rounded-full text-white shadow-sm
                   ${course.category === CourseCategory.Science ? 'bg-blue-500' : 
                     course.category === CourseCategory.Technology ? 'bg-indigo-500' : 
@@ -75,6 +76,10 @@ const CourseList: React.FC<CourseListProps> = ({ courses, onSelectCourse, onView
                     course.category === CourseCategory.Innovation ? 'bg-yellow-500' :
                     'bg-green-600'}`}>
                   {course.category}
+                </span>
+                <span className="flex items-center gap-1 px-2 py-1 bg-amber-500/90 text-white text-[10px] font-black rounded-lg backdrop-blur-sm shadow-sm uppercase tracking-tighter">
+                   <Zap className="w-3 h-3 fill-current" />
+                   {course.masteryPoints} Mastery XP
                 </span>
               </div>
             </div>
