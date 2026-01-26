@@ -16,12 +16,13 @@ const ADMIN_EMAIL = "frehun.demissie@gmail.com";
 const ADMIN_PASS = "Assefa2!";
 
 // --- STORAGE KEYS (Versioned to force data updates) ---
+// Bumped to v3 to ensure videoUrl fields propagate to all clients
 const STORAGE_KEYS = {
-  COURSES: 'fadlab_courses_v2',
-  STUDENTS: 'fadlab_students_v2',
-  ENROLLMENTS: 'fadlab_enrollments_v2',
-  PROJECTS: 'fadlab_projects_v2',
-  BOOKINGS: 'fadlab_bookings_v2'
+  COURSES: 'fadlab_courses_v3',
+  STUDENTS: 'fadlab_students_v3',
+  ENROLLMENTS: 'fadlab_enrollments_v3',
+  PROJECTS: 'fadlab_projects_v3',
+  BOOKINGS: 'fadlab_bookings_v3'
 };
 
 // --- DEFAULT DATA (Used if localStorage is empty) ---
@@ -315,7 +316,6 @@ const saveToStorage = (key: string, data: any) => {
 };
 
 // Initialize State from Storage or Defaults
-// Using v2 keys to reset data structure for videoUrl updates
 let MOCK_COURSES: Course[] = loadFromStorage(STORAGE_KEYS.COURSES, DEFAULT_COURSES);
 let MOCK_STUDENTS: Student[] = loadFromStorage(STORAGE_KEYS.STUDENTS, DEFAULT_STUDENTS);
 let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage(STORAGE_KEYS.ENROLLMENTS, DEFAULT_ENROLLMENTS);

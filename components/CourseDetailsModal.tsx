@@ -11,12 +11,14 @@ interface CourseDetailsModalProps {
 
 const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose, onEnroll }) => {
   
-  // Helper to extract YouTube ID from various URL formats
+  // Robust Helper to extract YouTube ID
   const getYouTubeID = (url: string) => {
     if (!url) return null;
+    // Regex to catch standard YouTube URL formats and shortlinks
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    // Relaxed check: just ensure we captured something valid (usually 11 chars, but safe to exist)
+    return (match && match[2]) ? match[2] : null;
   };
 
   const videoId = course.videoUrl ? getYouTubeID(course.videoUrl) : null;
@@ -123,7 +125,8 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
                     <Play className="w-3.5 h-3.5 text-blue-500" />
                     Introduction Video
                   </div>
-                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black aspect-video group">
+                  {/* Added min-h-[200px] to prevent collapse and style aspectRatio for fallback */}
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black aspect-video group min-h-[200px]" style={{ aspectRatio: '16/9' }}>
                     <iframe 
                       width="100%" 
                       height="100%" 
