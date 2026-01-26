@@ -15,6 +15,15 @@ const API_URL = (import.meta.env && import.meta.env.VITE_GOOGLE_SHEET_API_URL) |
 const ADMIN_EMAIL = "frehun.demissie@gmail.com";
 const ADMIN_PASS = "Assefa2!";
 
+// --- STORAGE KEYS (Versioned to force data updates) ---
+const STORAGE_KEYS = {
+  COURSES: 'fadlab_courses_v2',
+  STUDENTS: 'fadlab_students_v2',
+  ENROLLMENTS: 'fadlab_enrollments_v2',
+  PROJECTS: 'fadlab_projects_v2',
+  BOOKINGS: 'fadlab_bookings_v2'
+};
+
 // --- DEFAULT DATA (Used if localStorage is empty) ---
 
 const DEFAULT_COURSES: Course[] = [
@@ -306,10 +315,12 @@ const saveToStorage = (key: string, data: any) => {
 };
 
 // Initialize State from Storage or Defaults
-let MOCK_COURSES: Course[] = loadFromStorage('fadlab_courses', DEFAULT_COURSES);
-let MOCK_STUDENTS: Student[] = loadFromStorage('fadlab_students', DEFAULT_STUDENTS);
-let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage('fadlab_enrollments', DEFAULT_ENROLLMENTS);
-let MOCK_PROJECTS: Project[] = loadFromStorage('fadlab_projects', DEFAULT_PROJECTS);
+// Using v2 keys to reset data structure for videoUrl updates
+let MOCK_COURSES: Course[] = loadFromStorage(STORAGE_KEYS.COURSES, DEFAULT_COURSES);
+let MOCK_STUDENTS: Student[] = loadFromStorage(STORAGE_KEYS.STUDENTS, DEFAULT_STUDENTS);
+let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage(STORAGE_KEYS.ENROLLMENTS, DEFAULT_ENROLLMENTS);
+let MOCK_PROJECTS: Project[] = loadFromStorage(STORAGE_KEYS.PROJECTS, DEFAULT_PROJECTS);
+let MOCK_BOOKINGS: Booking[] = loadFromStorage(STORAGE_KEYS.BOOKINGS, []);
 
 // Static data
 const MOCK_SOCIAL_POSTS: SocialPost[] = [
@@ -395,8 +406,6 @@ const MOCK_ASSETS: Asset[] = [
 const MOCK_DIGITAL_ASSETS: DigitalAsset[] = [
   { id: 'da1', labId: 'l1', title: 'Gear Assembly STL', type: 'Model', description: 'Standard gear set for robotics projects.', url: '/models/gear_assembly.stl', authorName: 'System', downloads: 120, size: '45 MB' },
 ];
-
-let MOCK_BOOKINGS: Booking[] = loadFromStorage('fadlab_bookings', []);
 
 // --- NETWORK UTILITIES ---
 
@@ -498,7 +507,7 @@ export const sheetService = {
   async registerStudent(student: Student): Promise<Student> {
     const fallback = async () => {
       MOCK_STUDENTS.push(student);
-      saveToStorage('fadlab_students', MOCK_STUDENTS);
+      saveToStorage(STORAGE_KEYS.STUDENTS, MOCK_STUDENTS);
       return { ...student };
     };
     return fetchWithFallback<Student>('registerStudent', fallback, 'POST', student);
@@ -520,7 +529,7 @@ export const sheetService = {
             id: `c${Date.now()}`
         };
         MOCK_COURSES.push(newCourse);
-        saveToStorage('fadlab_courses', MOCK_COURSES);
+        saveToStorage(STORAGE_KEYS.COURSES, MOCK_COURSES);
         return newCourse;
     };
     return fetchWithFallback<Course>('addCourse', fallback, 'POST', course);
@@ -530,7 +539,7 @@ export const sheetService = {
     const fallback = async () => {
         await delay(800);
         MOCK_COURSES = MOCK_COURSES.filter(c => c.id !== courseId);
-        saveToStorage('fadlab_courses', MOCK_COURSES);
+        saveToStorage(STORAGE_KEYS.COURSES, MOCK_COURSES);
     };
     return fetchWithFallback<void>('deleteCourse', fallback, 'POST', { courseId });
   },
@@ -583,7 +592,7 @@ export const sheetService = {
                 ...MOCK_STUDENTS[index],
                 avatar: avatarUrl
             };
-            saveToStorage('fadlab_students', MOCK_STUDENTS);
+            saveToStorage(STORAGE_KEYS.STUDENTS, MOCK_STUDENTS);
         }
     };
     return fetchWithFallback<void>('updateAvatar', fallback, 'POST', { studentId, avatarUrl });
@@ -613,7 +622,7 @@ export const sheetService = {
                     ...student,
                     enrolledCourses: [...student.enrolledCourses, courseId]
                 };
-                saveToStorage('fadlab_students', MOCK_STUDENTS);
+                saveToStorage(STORAGE_KEYS.STUDENTS, MOCK_STUDENTS);
             }
         }
 
@@ -641,7 +650,7 @@ export const sheetService = {
             MOCK_ENROLLMENTS.push(resultEnrollment);
         }
         
-        saveToStorage('fadlab_enrollments', MOCK_ENROLLMENTS);
+        saveToStorage(STORAGE_KEYS.ENROLLMENTS, MOCK_ENROLLMENTS);
         return resultEnrollment;
     };
     
@@ -664,7 +673,7 @@ export const sheetService = {
           ...MOCK_ENROLLMENTS[index],
           progress: newProgress
         };
-        saveToStorage('fadlab_enrollments', MOCK_ENROLLMENTS);
+        saveToStorage(STORAGE_KEYS.ENROLLMENTS, MOCK_ENROLLMENTS);
         return MOCK_ENROLLMENTS[index];
       }
       return null;
@@ -705,7 +714,7 @@ export const sheetService = {
           timestamp: new Date().toISOString().split('T')[0]
         };
         MOCK_PROJECTS.unshift(newProject);
-        saveToStorage('fadlab_projects', MOCK_PROJECTS);
+        saveToStorage(STORAGE_KEYS.PROJECTS, MOCK_PROJECTS);
 
         const index = MOCK_STUDENTS.findIndex(s => s.id === project.authorId);
         if (index !== -1) {
@@ -715,7 +724,7 @@ export const sheetService = {
                 projectIds: student.projectIds ? [...student.projectIds, newProject.id] : [newProject.id],
                 points: student.points + 50
             };
-            saveToStorage('fadlab_students', MOCK_STUDENTS);
+            saveToStorage(STORAGE_KEYS.STUDENTS, MOCK_STUDENTS);
         }
 
         return newProject;
@@ -729,7 +738,7 @@ export const sheetService = {
       const project = MOCK_PROJECTS.find(p => p.id === projectId);
       if (project) {
         project.likes += 1;
-        saveToStorage('fadlab_projects', MOCK_PROJECTS);
+        saveToStorage(STORAGE_KEYS.PROJECTS, MOCK_PROJECTS);
       }
     };
     return fetchWithFallback<void>('likeProject', fallback, 'POST', { projectId });
@@ -775,7 +784,7 @@ export const sheetService = {
         id: `b${Date.now()}`
       };
       MOCK_BOOKINGS.push(newBooking);
-      saveToStorage('fadlab_bookings', MOCK_BOOKINGS);
+      saveToStorage(STORAGE_KEYS.BOOKINGS, MOCK_BOOKINGS);
       
       const asset = MOCK_ASSETS.find(a => a.id === booking.assetId);
       if (asset && booking.date === new Date().toISOString().split('T')[0]) {
