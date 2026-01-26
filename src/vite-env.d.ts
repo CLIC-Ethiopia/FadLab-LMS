@@ -3,7 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_SHEET_API_URL: string
   readonly API_KEY: string
-  // more env variables...
+  readonly VITE_SUPABASE_URL: string
+  readonly VITE_SUPABASE_ANON_KEY: string
 }
 
 interface ImportMeta {

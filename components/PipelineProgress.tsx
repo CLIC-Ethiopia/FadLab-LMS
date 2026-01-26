@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CourseCategory } from '../types';
 import { Zap } from 'lucide-react';
@@ -37,7 +36,8 @@ const PipelineProgress: React.FC<PipelineProgressProps> = ({ stats }) => {
         <div className="flex h-3 w-full rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
           {categories.map((cat) => {
             const value = stats[cat] || 0;
-            const total = Object.values(stats).reduce((a, b) => a + b, 0) || 1;
+            // Explicitly cast Object.values to number[] and add type annotations for 'a' and 'b' to fix type 'unknown' errors
+            const total = (Object.values(stats) as number[]).reduce((a: number, b: number) => a + b, 0) || 1;
             const width = (value / total) * 100;
             
             return (
