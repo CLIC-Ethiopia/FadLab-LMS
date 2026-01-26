@@ -14,10 +14,20 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
   // Robust Helper to extract YouTube ID
   const getYouTubeID = (url: string) => {
     if (!url) return null;
-    // Regex to catch standard YouTube URL formats and shortlinks
+    // Standard URL object parsing attempt
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname.includes('youtube.com')) {
+            return urlObj.searchParams.get('v');
+        } else if (urlObj.hostname.includes('youtu.be')) {
+            return urlObj.pathname.slice(1);
+        }
+    } catch (e) {
+        // Fallback to regex if malformed
+    }
+    // Standard Regex Fallback
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
-    // Relaxed check: just ensure we captured something valid (usually 11 chars, but safe to exist)
     return (match && match[2]) ? match[2] : null;
   };
 
@@ -118,26 +128,48 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
                 {course.description}
               </p>
               
-              {/* YouTube Embed Player */}
-              {videoId && (
+              {/* Introduction Video Section */}
+              {course.videoUrl && (
                 <div className="mt-6">
                   <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">
                     <Play className="w-3.5 h-3.5 text-blue-500" />
                     Introduction Video
                   </div>
-                  {/* Added min-h-[200px] to prevent collapse and style aspectRatio for fallback */}
-                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black aspect-video group min-h-[200px]" style={{ aspectRatio: '16/9' }}>
-                    <iframe 
-                      width="100%" 
-                      height="100%" 
-                      src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`} 
-                      title={`${course.title} Intro`}
-                      frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                      className="absolute inset-0 w-full h-full"
-                    ></iframe>
-                  </div>
+                  {/* If we have a valid extracted videoId, show the embed. Otherwise show a fallback link card. */}
+                  {videoId ? (
+                    <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black aspect-video group min-h-[200px]" style={{ aspectRatio: '16/9' }}>
+                        <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`} 
+                        title={`${course.title} Intro`}
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                        ></iframe>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-between border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/20 text-red-600 rounded-full">
+                                <Play className="w-5 h-5 fill-current" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-slate-800 dark:text-white text-sm">Watch Introduction</p>
+                                <p className="text-xs text-slate-500">Video available on external site</p>
+                            </div>
+                        </div>
+                        <a 
+                            href={course.videoUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-white text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-sm border border-slate-200 dark:border-slate-600 flex items-center gap-2"
+                        >
+                            Open Video <ExternalLink className="w-3 h-3" />
+                        </a>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

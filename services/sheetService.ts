@@ -16,13 +16,13 @@ const ADMIN_EMAIL = "frehun.demissie@gmail.com";
 const ADMIN_PASS = "Assefa2!";
 
 // --- STORAGE KEYS (Versioned to force data updates) ---
-// Bumped to v3 to ensure videoUrl fields propagate to all clients
+// Bumped to v4 to ensure clean slate for the merge logic
 const STORAGE_KEYS = {
-  COURSES: 'fadlab_courses_v3',
-  STUDENTS: 'fadlab_students_v3',
-  ENROLLMENTS: 'fadlab_enrollments_v3',
-  PROJECTS: 'fadlab_projects_v3',
-  BOOKINGS: 'fadlab_bookings_v3'
+  COURSES: 'fadlab_courses_v4',
+  STUDENTS: 'fadlab_students_v4',
+  ENROLLMENTS: 'fadlab_enrollments_v4',
+  PROJECTS: 'fadlab_projects_v4',
+  BOOKINGS: 'fadlab_bookings_v4'
 };
 
 // --- DEFAULT DATA (Used if localStorage is empty) ---
@@ -316,7 +316,27 @@ const saveToStorage = (key: string, data: any) => {
 };
 
 // Initialize State from Storage or Defaults
-let MOCK_COURSES: Course[] = loadFromStorage(STORAGE_KEYS.COURSES, DEFAULT_COURSES);
+let storedCourses: Course[] = loadFromStorage(STORAGE_KEYS.COURSES, DEFAULT_COURSES);
+
+// --- SMART MERGE STRATEGY ---
+// This ensures that even if local storage has old data, we force update fields like 'videoUrl'
+// from our code-defined DEFAULT_COURSES if the ID matches.
+let MOCK_COURSES = storedCourses.map(c => {
+  const defaultVersion = DEFAULT_COURSES.find(d => d.id === c.id);
+  if (defaultVersion) {
+    return {
+      ...c,
+      // Force update these fields from code to ensure they appear
+      videoUrl: defaultVersion.videoUrl,
+      thumbnail: defaultVersion.thumbnail,
+      resources: (c.resources && c.resources.length > 0) ? c.resources : defaultVersion.resources,
+      learningPoints: (c.learningPoints && c.learningPoints.length > 0) ? c.learningPoints : defaultVersion.learningPoints,
+      curriculum: (c.curriculum && c.curriculum.length > 0) ? c.curriculum : defaultVersion.curriculum
+    };
+  }
+  return c;
+});
+
 let MOCK_STUDENTS: Student[] = loadFromStorage(STORAGE_KEYS.STUDENTS, DEFAULT_STUDENTS);
 let MOCK_ENROLLMENTS: Enrollment[] = loadFromStorage(STORAGE_KEYS.ENROLLMENTS, DEFAULT_ENROLLMENTS);
 let MOCK_PROJECTS: Project[] = loadFromStorage(STORAGE_KEYS.PROJECTS, DEFAULT_PROJECTS);
