@@ -46,7 +46,6 @@ const DEFAULT_COURSES: Course[] = [
     ],
     resources: [
       { title: 'STEAM Education Framework PDF', url: '/docs/steam_framework.pdf', type: 'document' },
-      { title: 'Introductory Lecture Video', url: '#', type: 'video' },
       { title: 'Official CLIC Africa Website', url: 'https://clicafrica.org', type: 'link' }
     ]
   },
@@ -60,7 +59,7 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Dr. Abyot Redahegn',
     thumbnail: 'https://picsum.photos/400/225?random=2',
     level: 'Intermediate',
-    videoUrl: '',
+    videoUrl: 'https://www.youtube.com/watch?v=IB5n2w33ejo',
     learningPoints: [
       'Build a vertical farm system',
       'Manage nutrient solutions',
@@ -89,6 +88,7 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Eng. Nathnael',
     thumbnail: 'https://picsum.photos/400/225?random=3',
     level: 'Advanced',
+    videoUrl: 'https://www.youtube.com/watch?v=6mBO2vqLv38',
     resources: [
       { title: 'Arduino for Industry 4.0', url: '#', type: 'video' },
       { title: 'Sensor Integration Manual', url: '/docs/sensor_manual.pdf', type: 'document' }
@@ -104,6 +104,7 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Lecturer Mulunesh',
     thumbnail: 'https://picsum.photos/400/225?random=4',
     level: 'Beginner',
+    videoUrl: 'https://www.youtube.com/watch?v=Fqch5OrUPvA',
     resources: [
       { title: 'Business Model Canvas Template', url: '/google_drive/Templates/BMC_v2.pdf', type: 'document' },
       { title: 'Pitch Deck Examples', url: '#', type: 'link' }
@@ -119,6 +120,7 @@ const DEFAULT_COURSES: Course[] = [
     instructor: 'Prof. Frehun Adefris',
     thumbnail: 'https://picsum.photos/400/225?random=5',
     level: 'Advanced',
+    videoUrl: 'https://www.youtube.com/watch?v=y1k3k5rZgT4',
     resources: [
       { title: '3DCP Technology Overview', url: '#', type: 'video' }
     ]
@@ -132,7 +134,8 @@ const DEFAULT_COURSES: Course[] = [
     description: 'Statistical analysis and geometry for manufacturing.',
     instructor: 'Dr. Almaz',
     thumbnail: 'https://picsum.photos/400/225?random=6',
-    level: 'Intermediate'
+    level: 'Intermediate',
+    videoUrl: 'https://www.youtube.com/watch?v=Vp267-YjXnU'
   },
   {
     id: 'c7',
@@ -143,7 +146,8 @@ const DEFAULT_COURSES: Course[] = [
     description: 'Using digital tools for industrial design and creative expression.',
     instructor: 'Artist Kebede',
     thumbnail: 'https://picsum.photos/400/225?random=7',
-    level: 'Beginner'
+    level: 'Beginner',
+    videoUrl: 'https://www.youtube.com/watch?v=b2q_9oFfCgU'
   }
 ];
 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Course, CourseCategory } from '../types';
-import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen, Layers, List, GraduationCap, Zap } from 'lucide-react';
+import { Clock, BarChart, User, Tag, X, CheckCircle, FileText, Video, Link as LinkIcon, ExternalLink, BookOpen, Layers, List, GraduationCap, Zap, Play } from 'lucide-react';
 
 interface CourseDetailsModalProps {
   course: Course;
@@ -11,6 +11,16 @@ interface CourseDetailsModalProps {
 
 const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose, onEnroll }) => {
   
+  // Helper to extract YouTube ID from various URL formats
+  const getYouTubeID = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const videoId = course.videoUrl ? getYouTubeID(course.videoUrl) : null;
+
   // Dynamic content generation to ensure sections are populated if data is missing (fallback)
   const learningPoints = course.learningPoints && course.learningPoints.length > 0 
     ? course.learningPoints 
@@ -96,8 +106,8 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
           </div>
 
           <div className="space-y-8">
-            {/* About */}
-            <div>
+            {/* About & Video */}
+            <div className="space-y-4">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-slate-500" />
                 About this Course
@@ -106,17 +116,26 @@ const CourseDetailsModal: React.FC<CourseDetailsModalProps> = ({ course, onClose
                 {course.description}
               </p>
               
-              {/* Optional: Show Video Link if available */}
-              {course.videoUrl && (
-                <a 
-                   href={course.videoUrl} 
-                   target="_blank" 
-                   rel="noreferrer"
-                   className="inline-flex items-center gap-2 mt-3 text-blue-600 dark:text-blue-400 font-medium hover:underline"
-                >
-                   <Video className="w-4 h-4" />
-                   Watch Introduction Video
-                </a>
+              {/* YouTube Embed Player */}
+              {videoId && (
+                <div className="mt-6">
+                  <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <Play className="w-3.5 h-3.5 text-blue-500" />
+                    Introduction Video
+                  </div>
+                  <div className="relative w-full rounded-2xl overflow-hidden shadow-xl bg-black aspect-video group">
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      src={`https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`} 
+                      title={`${course.title} Intro`}
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                  </div>
+                </div>
               )}
             </div>
             
